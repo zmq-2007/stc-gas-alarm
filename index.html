@@ -1,0 +1,1296 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>蜂鸣器 PWM 实训 · 一比一仿真平台</title>
+<style>
+:root{
+  --bg:#f4f6fb; --card:#ffffff; --line:#e3e8f2; --line2:#eef2f9;
+  --ink:#1b2437; --ink2:#5b6780; --ink3:#8b97ad;
+  --brand:#3355d8; --brand2:#5b7cfa; --brand-soft:#eef2ff;
+  --ok:#0f9d58; --ok-soft:#e8f7ef; --warn:#e07b00; --warn-soft:#fff4e3;
+  --err:#d6384a; --err-soft:#fdeced; --code:#0f172a;
+  --mono:Consolas,"Cascadia Mono","Courier New",monospace;
+  --shadow:0 2px 10px rgba(30,50,90,.06),0 10px 30px rgba(30,50,90,.045);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:"Microsoft YaHei","PingFang SC","Segoe UI",sans-serif;font-size:14px;line-height:1.65}
+button,input,select,textarea{font-family:inherit;font-size:inherit;color:inherit}
+button{cursor:pointer}
+.hidden{display:none !important}
+
+/* ---------- 顶栏 ---------- */
+.topbar{position:sticky;top:0;z-index:30;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:22px;padding:0 20px;height:62px;box-shadow:0 1px 6px rgba(30,50,90,.04)}
+.brand{display:flex;align-items:center;gap:10px;min-width:290px}
+.brand .logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--brand),var(--brand2));display:grid;place-items:center;color:#fff;font-weight:700;font-size:15px;letter-spacing:-1px}
+.brand b{font-size:15px;display:block;line-height:1.25}
+.brand small{color:var(--ink3);font-size:11px;letter-spacing:.4px}
+.toptabs{display:flex;gap:6px;flex:1}
+.toptabs button{border:1px solid transparent;background:transparent;padding:8px 16px;border-radius:8px;font-weight:600;color:var(--ink2)}
+.toptabs button.active{background:var(--brand-soft);color:var(--brand);border-color:#d8e0ff}
+.toptabs button.locked{color:var(--ink3)}
+.toptabs button.locked:after{content:"锁定";margin-left:8px;background:#edf0f6;border-radius:10px;padding:1px 7px;font-size:10px;font-weight:600}
+.toptabs button.unlocked:after{content:"已解锁";margin-left:8px;background:var(--ok-soft);color:var(--ok);border-radius:10px;padding:1px 7px;font-size:10px;font-weight:600}
+.topright{display:flex;align-items:center;gap:12px}
+.pill{padding:5px 11px;border-radius:20px;font-size:12px;font-weight:600;background:#edf0f6;color:var(--ink2)}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.ghost{border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 12px;color:var(--ink2);font-size:12px}
+.ghost:hover{border-color:var(--brand);color:var(--brand)}
+
+/* ---------- 布局 ---------- */
+.app{display:grid;grid-template-columns:248px minmax(0,1fr) 296px;gap:16px;padding:16px 20px 40px;max-width:1680px;margin:0 auto;align-items:start}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow)}
+.sidebar{position:sticky;top:78px;max-height:calc(100vh - 96px);overflow:auto;padding:14px}
+.sidebar h4{margin:2px 0 10px;font-size:12px;color:var(--ink3);letter-spacing:1px;font-weight:700}
+.progwrap{margin-bottom:14px}
+.progbar{height:7px;background:#eaeef7;border-radius:8px;overflow:hidden}
+.progbar i{display:block;height:100%;width:0;border-radius:8px;background:linear-gradient(90deg,var(--brand),var(--brand2));transition:width .35s}
+.progtxt{font-size:11px;color:var(--ink3);display:flex;justify-content:space-between;margin-top:6px}
+.navgroup{font-size:11px;color:var(--ink3);font-weight:700;letter-spacing:.6px;margin:14px 6px 6px;padding-top:10px;border-top:1px dashed var(--line)}
+.navitem{display:flex;gap:9px;align-items:center;width:100%;text-align:left;border:0;background:transparent;padding:8px 9px;border-radius:8px;color:var(--ink2);font-size:12.5px;line-height:1.4}
+.navitem:hover{background:#f5f7fd}
+.navitem.active{background:var(--brand-soft);color:var(--brand);font-weight:700}
+.navitem .dot{width:18px;height:18px;flex:none;border-radius:50%;border:1.5px solid #cdd6e8;display:grid;place-items:center;font-size:10px;color:#fff;background:#fff}
+.navitem.done .dot{background:var(--ok);border-color:var(--ok)}
+.navitem.done .dot:after{content:"✓"}
+.navitem.active .dot{border-color:var(--brand);color:var(--brand);background:#fff}
+.navitem span.t{flex:1}
+
+.content{min-width:0}
+.stephead{padding:20px 24px 16px;border-bottom:1px solid var(--line2)}
+.crumb{font-size:11.5px;color:var(--brand);font-weight:700;letter-spacing:.5px}
+.stephead h2{margin:6px 0 4px;font-size:21px;letter-spacing:-.3px}
+.stephead p{margin:0;color:var(--ink2);font-size:13px}
+.stepbody{padding:22px 24px 26px;min-height:430px}
+.stepfoot{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 24px;border-top:1px solid var(--line2);background:#fcfdff;border-radius:0 0 12px 12px}
+.stepfoot .hint{font-size:12px;color:var(--ink3)}
+.right{position:sticky;top:78px;max-height:calc(100vh - 96px);overflow:auto;display:flex;flex-direction:column;gap:14px}
+.rbox{padding:14px}
+.rbox h4{margin:0 0 10px;font-size:12.5px;display:flex;justify-content:space-between;align-items:center}
+.rbox h4 small{font-weight:400;color:var(--ink3);font-size:11px}
+
+/* ---------- 通用组件 ---------- */
+h3.sec{font-size:15px;margin:22px 0 10px;padding-left:10px;border-left:3px solid var(--brand)}
+h3.sec:first-child{margin-top:0}
+p.tx{margin:8px 0;color:var(--ink2)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:1080px){.grid2,.grid3{grid-template-columns:1fr}}
+.box{background:#f8faff;border:1px solid var(--line);border-radius:10px;padding:14px}
+.box.soft{background:#fbfcff}
+.box.ok{background:var(--ok-soft);border-color:#c9ead6}
+.box.warn{background:var(--warn-soft);border-color:#f3ddb8}
+.tag{display:inline-block;background:var(--brand-soft);color:var(--brand);border-radius:5px;padding:2px 8px;font-size:11.5px;font-weight:700;margin-right:6px}
+.tag.g{background:var(--ok-soft);color:var(--ok)}
+.tag.o{background:var(--warn-soft);color:var(--warn)}
+.btn{border:1px solid var(--brand);background:var(--brand);color:#fff;border-radius:8px;padding:9px 17px;font-weight:700;font-size:13px;box-shadow:0 3px 10px rgba(51,85,216,.16)}
+.btn:hover{filter:brightness(1.08)}
+.btn:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
+.btn.sec2{background:#fff;color:var(--brand);box-shadow:none}
+.btn.gray{background:#fff;color:var(--ink2);border-color:var(--line);box-shadow:none}
+.btn.green{background:var(--ok);border-color:var(--ok)}
+.btn.sm{padding:6px 12px;font-size:12px}
+.btnrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:14px}
+.kv{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px dashed var(--line);font-size:12.5px}
+.kv:last-child{border-bottom:0}
+.kv b{color:var(--brand);font-family:var(--mono)}
+ul.clean{margin:8px 0;padding-left:20px;color:var(--ink2)}
+ul.clean li{margin:5px 0}
+table.t{width:100%;border-collapse:collapse;font-size:12.5px;margin:10px 0}
+table.t th,table.t td{border:1px solid var(--line);padding:8px 10px;text-align:left}
+table.t th{background:#f5f7fd;color:var(--ink2);font-weight:700}
+code.inl{font-family:var(--mono);background:#eef2fb;color:#2b3d8f;padding:1px 5px;border-radius:4px;font-size:12px}
+
+/* 代码编辑器 */
+.editor{border:1px solid #d9e1f0;border-radius:10px;overflow:hidden;background:#0f172a}
+.edtop{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#1b2740;padding:7px 12px;color:#a9b8d6;font-size:12px}
+.edtop .fn{font-family:var(--mono);color:#e6edff;font-weight:700}
+.edtop .st{font-size:11px;padding:2px 9px;border-radius:10px;background:#33415f;color:#cfd9ef}
+.edtop .st.ok{background:#115c3c;color:#b6f2d1}
+.edtop .st.bad{background:#7a2030;color:#ffd0d8}
+textarea.code{display:block;width:100%;height:330px;resize:vertical;border:0;outline:0;background:#0f172a;color:#dbe7ff;padding:14px 16px;font-family:var(--mono);font-size:12.2px;line-height:1.62;tab-size:4;white-space:pre;overflow:auto}
+textarea.code:focus{box-shadow:inset 0 0 0 2px #4668e8}
+pre.codeview{background:#0f172a;color:#dbe7ff;border-radius:10px;padding:14px 16px;overflow:auto;font-family:var(--mono);font-size:12.2px;line-height:1.6;margin:0}
+pre.codeview .cm{color:#7f94b8}
+pre.codeview .kw{color:#8fb7ff}
+pre.codeview .nm{color:#ffd58f}
+
+/* 文件树 */
+.tree{font-family:var(--mono);font-size:11.5px;line-height:1.9;color:var(--ink2)}
+.tree .d{color:#2b3d8f;font-weight:700}
+.tree .f{color:#46536d}
+.tree .new{color:var(--ok);font-weight:700}
+.tree .mut{color:var(--warn)}
+.tree .muted{color:#b3bccd}
+.tree div{padding-left:8px;border-left:1px dashed #e0e6f2}
+.tree .root{padding-left:0;border:0}
+
+/* 控制台 */
+.console{background:#101827;color:#c9d7ef;border-radius:9px;padding:10px 11px;height:186px;overflow:auto;font-family:var(--mono);font-size:11px;line-height:1.65}
+.console div{white-space:pre-wrap;word-break:break-all}
+.console .i{color:#7f94b8}
+.console .ok{color:#7ee2a8}
+.console .err{color:#ff9aa8}
+.console .w{color:#ffd08a}
+.console .cmd{color:#9ec0ff}
+
+/* 开发板 */
+.boardwrap{background:#f8faff;border:1px solid var(--line);border-radius:10px;padding:8px}
+.boardwrap svg{width:100%;height:auto;display:block}
+.boardwrap.active .beepdot{animation:bp .16s infinite alternate}
+.boardwrap.active .wave{animation:wv .5s infinite ease-out}
+@keyframes bp{from{r:9;fill:#e8574a}to{r:12;fill:#ff9b8f}}
+@keyframes wv{from{opacity:.15;transform:scale(.7)}to{opacity:0;transform:scale(1.35)}}
+.ledline{display:flex;gap:12px;font-size:11px;color:var(--ink2);margin-top:8px;justify-content:center}
+.ledline i{width:8px;height:8px;border-radius:50%;background:#cbd4e4;display:inline-block;margin-right:4px}
+.ledline .on{background:var(--ok);box-shadow:0 0 6px var(--ok)}
+
+/* 波形 */
+.canvasbox{background:#fbfdff;border:1px solid var(--line);border-radius:10px;padding:10px}
+canvas{display:block;width:100%;height:200px}
+canvas.timeline{height:118px}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:11.5px;color:var(--ink2);margin-top:8px}
+.legend span:before{content:"";display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--brand);margin-right:5px;vertical-align:-1px}
+.legend span.l2:before{background:#f0a53a}
+.legend span.l3:before{background:#9aa7bd}
+.ctrl{display:flex;align-items:center;gap:10px;margin:10px 0;font-size:12.5px;color:var(--ink2);flex-wrap:wrap}
+.ctrl label{min-width:74px}
+input[type=range]{flex:1;min-width:130px;accent-color:var(--brand)}
+input[type=number],select,input[type=text]{border:1px solid var(--line);border-radius:7px;padding:7px 9px;background:#fff;outline:0}
+input[type=number]{width:82px;font-family:var(--mono)}
+input[type=text]{width:100%}
+.outnum{font-family:var(--mono);color:var(--brand);font-weight:700;min-width:64px;display:inline-block;text-align:right}
+.metric{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}
+.metric div{background:#f5f8ff;border:1px solid var(--line);border-radius:8px;padding:9px 10px}
+.metric small{display:block;color:var(--ink3);font-size:10.5px}
+.metric b{font-family:var(--mono);font-size:14px;color:var(--brand)}
+@media(max-width:760px){.metric{grid-template-columns:repeat(2,1fr)}}
+
+/* 实验台 */
+.labtabs{display:flex;gap:8px;padding:14px 20px 0;border-bottom:1px solid var(--line2);flex-wrap:wrap}
+.labtabs button{border:1px solid var(--line);background:#fff;color:var(--ink2);border-radius:8px 8px 0 0;padding:9px 16px;font-weight:700;font-size:13px;border-bottom:0;transform:translateY(1px)}
+.labtabs button.active{background:var(--brand-soft);color:var(--brand);border-color:#d8e0ff}
+.labpanel{padding:20px 24px 28px}
+.lockview{text-align:center;padding:70px 20px}
+.lockview .lk{width:64px;height:64px;margin:0 auto 18px;border-radius:18px;background:#eef2fa;display:grid;place-items:center;font-size:26px;color:#9aa9c4;font-weight:700}
+.lockview h3{margin:0 0 8px;font-size:19px}
+.lockview p{color:var(--ink2);margin:0 0 20px}
+details.ana{border:1px solid var(--line);border-radius:10px;margin-bottom:10px;background:#fff;overflow:hidden}
+details.ana summary{cursor:pointer;padding:12px 15px;font-weight:700;font-size:13.5px;background:#f9fbff;list-style:none;display:flex;align-items:center;gap:10px}
+details.ana summary::-webkit-details-marker{display:none}
+details.ana summary:before{content:"▸";color:var(--brand);font-size:14px}
+details.ana[open] summary:before{content:"▾"}
+details.ana .body{padding:12px 16px 16px;border-top:1px solid var(--line2)}
+details.ana pre{margin:0 0 10px}
+.notecard{background:#fffdf6;border:1px solid #f0e2bd;border-left:3px solid #e5a52a;border-radius:8px;padding:10px 13px;font-size:12.5px;color:#7a5b1e;margin-top:10px}
+.toast{position:fixed;right:22px;bottom:22px;z-index:80;background:#1e2a44;color:#fff;padding:12px 18px;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.2);font-size:13px;opacity:0;transform:translateY(12px);transition:.25s;pointer-events:none;max-width:380px}
+.toast.show{opacity:1;transform:none}
+.toast.ok{background:#116b45}
+.toast.err{background:#a52838}
+.bar{height:9px;background:#e9eef8;border-radius:8px;overflow:hidden;margin:12px 0}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--brand),var(--brand2));width:0;transition:width .25s}
+.chip{display:inline-flex;gap:6px;align-items:center;border:1px solid var(--line);border-radius:20px;padding:4px 11px;font-size:11.5px;color:var(--ink2);background:#fff;margin:0 6px 6px 0}
+.chip.on{background:var(--ok-soft);border-color:#bde5cc;color:var(--ok);font-weight:700}
+.noteBig{font-size:26px;font-weight:800;color:var(--brand);font-family:var(--mono)}
+
+/* 任务书原文 / 预备知识 */
+.prepblock{padding:22px 24px 26px;border-bottom:1px solid var(--line2)}
+.prepblock:last-child{border-bottom:0}
+.prepblock h2{font-size:17px;margin:0 0 4px}
+.prepblock .pd{color:var(--ink3);font-size:12px;margin:0 0 14px}
+.quotebox{background:#fffdf6;border:1px dashed #e5c989;border-left:3px solid #e5a52a;border-radius:8px;padding:10px 14px;font-size:13px;color:#6b5220;margin-bottom:18px;line-height:1.75}
+.quotebox b{color:#9a6a10;margin-right:8px}
+.steplabel{display:inline-block;background:var(--brand);color:#fff;border-radius:6px;padding:2px 9px;font-size:11.5px;font-weight:700;margin-right:8px}
+.taskall{background:#f8faff;border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:18px}
+.taskall ol{margin:8px 0 0;padding-left:22px;color:var(--ink2);font-size:12.5px;line-height:1.9}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="logo">PWM</div>
+    <div><b>蜂鸣器开发 · 一比一实训仿真</b><small>HiHope NearLink DK_WS63E_V03 ｜ 交通灯板 BEEP ｜ github.com/zmq-2007/stc-gas-alarm</small></div>
+  </div>
+  <div class="toptabs">
+    <button id="tabFlow" class="active" data-view="flow">实训流程（任务书 8 步）</button>
+    <button id="tabPrep" data-view="prep">预备知识 · 具体实现</button>
+    <button id="tabLab" class="locked" data-view="lab">虚拟蜂鸣器实验台</button>
+  </div>
+  <div class="topright">
+    <span id="compilePill" class="pill">编译未通过</span>
+    <button class="ghost" id="resetBtn">重置实训</button>
+  </div>
+</header>
+
+<div class="app">
+  <!-- 左侧步骤导航 -->
+  <aside class="sidebar card">
+    <h4>实训指导任务书 · 8 步进度</h4>
+    <div class="progwrap">
+      <div class="progbar"><i id="progBar"></i></div>
+      <div class="progtxt"><span id="progTxt">0 / 8 已完成</span><span id="progPct">0%</span></div>
+    </div>
+    <nav id="stepNav"></nav>
+    <div class="navgroup">配套资料</div>
+    <div style="font-size:11.5px;color:var(--ink3);line-height:1.7;padding:0 9px 4px">顶部「预备知识 · 具体实现」里放任务书 1~3 节：基础知识、接口 API、PWM 参数计算、完整控制代码与分析。</div>
+  </aside>
+
+  <!-- 中间主区 -->
+  <main class="content">
+    <!-- 预备知识：任务书 1~3 节，不计入 8 步实验流程 -->
+    <section id="prepView" class="card hidden">
+      <div class="stephead">
+        <div class="crumb">任务书 1~3 节 · 认知准备（不计入 8 步实验流程）</div>
+        <h2>基础知识 / 接口 API / 具体实现</h2>
+        <p>任务书正文中的配套知识，随时可查阅；实验流程严格按右侧 8 个步骤一比一还原。</p>
+      </div>
+      <div id="prepBody"></div>
+    </section>
+
+    <section id="flowView" class="card">
+      <div class="stephead">
+        <div class="crumb" id="crumb"></div>
+        <h2 id="stepTitle"></h2>
+        <p id="stepSub"></p>
+      </div>
+      <div class="stepbody" id="stepBody"></div>
+      <div class="stepfoot">
+        <button class="btn gray sm" id="prevBtn">← 上一步</button>
+        <span class="hint" id="footHint"></span>
+        <button class="btn sm" id="nextBtn">下一步 →</button>
+      </div>
+    </section>
+
+    <!-- 实验台 -->
+    <section id="labView" class="card hidden">
+      <div id="labLocked" class="lockview">
+        <div class="lk">锁</div>
+        <h3>虚拟蜂鸣器尚未生成</h3>
+        <p>按照任务书要求：<b>必须先提交代码，并在网页中编译通过</b>，才能生成虚拟蜂鸣器并驱动电脑发声。</p>
+        <button class="btn" data-go="f6">前往「步骤六 · 编译」完成解锁</button>
+      </div>
+      <div id="labMain" class="hidden">
+        <div class="labtabs">
+          <button class="active" data-lab="tone">① 单调响声 + PWM 波形</button>
+          <button data-lab="music">② 音乐演奏 + PWM 波形</button>
+          <button data-lab="analysis">③ 关键控制代码分析</button>
+        </div>
+
+        <!-- ① 单调响声 -->
+        <div class="labpanel" id="labTone">
+          <h3 class="sec">1. 发单调响声（Web Audio 驱动电脑蜂鸣器/扬声器）</h3>
+          <p class="tx">与板卡同源：以 <code class="inl">32 MHz</code> PWM 时钟计算 <code class="inl">low_time / high_time</code>，输出方波驱动蜂鸣器；下方实时绘制对应的 PWM 波形。默认参数与板卡代码一致（约 1067 Hz / 33%）。</p>
+          <div class="grid2">
+            <div class="box">
+              <div class="ctrl"><label>频率 f</label><input type="range" id="tFreq" min="100" max="2000" step="1" value="1067"><span class="outnum" id="tFreqV">1067 Hz</span></div>
+              <div class="ctrl"><label>占空比 D</label><input type="range" id="tDuty" min="5" max="95" step="1" value="33"><span class="outnum" id="tDutyV">33 %</span></div>
+              <div class="ctrl"><label>音量</label><input type="range" id="tVol" min="0" max="100" step="1" value="22"><span class="outnum" id="tVolV">22 %</span></div>
+              <div class="btnrow">
+                <button class="btn green" id="tone3s">鸣响 3 秒后停止</button>
+                <button class="btn sec2" id="toneStart">持续鸣响</button>
+                <button class="btn gray" id="toneStop">停止</button>
+                <button class="btn gray sm" id="toneDefault">恢复板卡参数</button>
+              </div>
+              <div class="notecard" id="toneState">状态：待机（无波形输出，蜂鸣器静音）</div>
+            </div>
+            <div class="box">
+              <div class="kv"><span>PWM 周期 T = 1 / f</span><b id="mT">937.5 µs</b></div>
+              <div class="kv"><span>周期 tick = 32 MHz / f</span><b id="mTicks">30000</b></div>
+              <div class="kv"><span>low_time（低电平 tick）</span><b id="mLow">20000</b></div>
+              <div class="kv"><span>high_time（高电平 tick）</span><b id="mHigh">10000</b></div>
+              <div class="kv"><span>高电平时长 t<sub>H</sub></span><b id="mHighUs">312.5 µs</b></div>
+              <div class="kv"><span>输出引脚</span><b>GPIO9 → A9 → BEEP</b></div>
+            </div>
+          </div>
+          <h3 class="sec">2. 实时 PWM 波形图</h3>
+          <div class="canvasbox"><canvas id="toneCanvas"></canvas>
+            <div class="legend"><span>高电平（导通，蜂鸣器振动）</span><span class="l2">周期 T / 占空比标注</span><span class="l3">低电平（截止）</span></div>
+          </div>
+          <div class="metric">
+            <div><small>当前频率</small><b id="mF2">1067 Hz</b></div>
+            <div><small>占空比</small><b id="mD2">33 %</b></div>
+            <div><small>时间窗</small><b>8 ms</b></div>
+            <div><small>鸣响倒计时</small><b id="mCount">--</b></div>
+          </div>
+        </div>
+
+        <!-- ② 音乐 -->
+        <div class="labpanel hidden" id="labMusic">
+          <h3 class="sec">1. 电脑蜂鸣器演奏《数鸭子》</h3>
+          <p class="tx">把任务一里“只发一个频率”升级成“按乐谱切换频率”。每个音符对应一组 <code class="inl">low_time / high_time</code>，本质就是不断重写 PWM 周期寄存器 —— 与 Arduino 的 <code class="inl">tone(BUZZER_PIN, freq)</code> 同理。</p>
+          <div class="box">
+            <div class="ctrl"><label>演奏速度</label>
+              <select id="mSpeed"><option value="0.75">0.75× 慢速</option><option value="1" selected>1× 原速</option><option value="1.5">1.5× 快速</option></select>
+              <label>PWM 占空比</label>
+              <select id="mDuty"><option value="0.25">25%</option><option value="0.5" selected>50%</option><option value="0.75">75%</option></select>
+              <button class="btn green sm" id="musicPlay">开始演奏</button>
+              <button class="btn gray sm" id="musicStop">停止</button>
+            </div>
+            <div class="bar"><i id="musicBar"></i></div>
+            <div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap">
+              <div><small style="color:var(--ink3)">当前唱词</small><div id="curLyric" style="font-weight:700;font-size:15px">—</div></div>
+              <div><small style="color:var(--ink3)">当前音符</small><div class="noteBig" id="curNote">—</div></div>
+              <div><small style="color:var(--ink3)">频率 / 周期</small><div id="curFreq" style="font-family:var(--mono);font-weight:700;color:var(--brand)">—</div></div>
+              <div><small style="color:var(--ink3)">low_time / high_time</small><div id="curTick" style="font-family:var(--mono);font-weight:700;color:var(--brand)">—</div></div>
+            </div>
+          </div>
+          <h3 class="sec">2. 当前音符对应的 PWM 波形（频率越高，波形越密）</h3>
+          <div class="canvasbox"><canvas id="musicCanvas"></canvas>
+            <div class="legend"><span>PWM 方波（8 ms 时间窗）</span><span class="l2">当前音符高亮</span><span class="l3">休止符 REST：无输出</span></div>
+          </div>
+          <h3 class="sec">3. 旋律 / 音高时间轴</h3>
+          <div class="canvasbox"><canvas class="timeline" id="musicTimeline"></canvas>
+            <div class="legend"><span>音符（高度 = 音高）</span><span class="l2">播放头</span><span class="l3">休止符</span></div>
+          </div>
+          <div class="box soft" style="margin-top:12px">
+            <b>简谱与频率对照</b>
+            <div id="scoreChips" style="margin-top:8px"></div>
+            <p class="tx" style="margin-bottom:0">乐谱来源：本机实训代码《按键播放音乐》—— DO 262 / RE 294 / MI 330 / FA 349 / SO 392 / LA 440 / SI 494 / 高音 DO 523 Hz，四分音符 200 ms、二分音符 400 ms。</p>
+          </div>
+        </div>
+
+        <!-- ③ 代码分析 -->
+        <div class="labpanel hidden" id="labAnalysis">
+          <h3 class="sec">关键控制代码逐段分析</h3>
+          <p class="tx">点击展开每一段。左侧是板卡真实代码（已改造成“响 3 秒后停止”），右侧是它在整个控制链路里承担的作用。</p>
+          <div id="anaList"></div>
+          <h3 class="sec">整链路时序（对应任务书「具体实现 步骤一 / 步骤二」）</h3>
+          <div class="box">
+            <div class="kv"><span>① 引脚复用</span><b>uapi_pin_set_mode(9, 1)</b></div>
+            <div class="kv"><span>② 模块初始化</span><b>uapi_pwm_init()</b></div>
+            <div class="kv"><span>③ 写入波形参数（频率 + 占空比）</span><b>uapi_pwm_open(1, &amp;cfg)</b></div>
+            <div class="kv"><span>④ 通道分组 + 回调注册</span><b>uapi_pwm_set_group(1, &amp;ch, 1)</b></div>
+            <div class="kv"><span>⑤ 启动输出 → 蜂鸣器响</span><b>uapi_pwm_start(1)</b></div>
+            <div class="kv"><span>⑥ 保持 3000 ms</span><b>uapi_tcxo_delay_ms(3000)</b></div>
+            <div class="kv"><span>⑦ 关通道 / 去初始化 / 引脚拉低 → 停止</span><b>uapi_pwm_close() + uapi_pwm_deinit()</b></div>
+          </div>
+          <div class="notecard">重点：无源蜂鸣器必须由 <b>交变的 PWM 方波</b>驱动才会持续振动发声；只给一个恒定高电平只有“嗒”一声，甚至一直直流导通。所以“停止”不能只是不翻转电平，必须 <b>关闭 PWM 通道并把引脚固定为低电平</b>。</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- 右侧状态栏 -->
+  <aside class="right">
+    <div class="card rbox">
+      <h4>虚拟开发板 <small id="boardStatus">未上电</small></h4>
+      <div class="boardwrap" id="boardWrap">
+        <svg viewBox="0 0 260 140" xmlns="http://www.w3.org/2000/svg">
+          <rect x="4" y="6" width="252" height="128" rx="10" fill="#16603f" stroke="#0e4a30"/>
+          <rect x="12" y="14" width="236" height="112" rx="7" fill="none" stroke="#2f8a60" stroke-dasharray="3 3"/>
+          <rect x="26" y="34" width="86" height="66" rx="5" fill="#1b2437" stroke="#3b4a68"/>
+          <text x="69" y="62" fill="#c9d7ef" font-size="9" text-anchor="middle" font-family="monospace">WS63E</text>
+          <text x="69" y="76" fill="#8fa3c8" font-size="7.5" text-anchor="middle" font-family="monospace">GPIO 9 / PWM1</text>
+          <line x1="112" y1="66" x2="168" y2="66" stroke="#f0c85a" stroke-width="2" stroke-dasharray="4 3"/>
+          <text x="140" y="60" fill="#f0c85a" font-size="8" text-anchor="middle" font-family="monospace">A9</text>
+          <circle cx="196" cy="66" r="20" fill="#2b3a2e" stroke="#8fb89b"/>
+          <circle class="beepdot" cx="196" cy="66" r="9" fill="#e8574a"/>
+          <circle class="wave" cx="196" cy="66" r="20" fill="none" stroke="#ffd08a" stroke-width="2" opacity="0"/>
+          <text x="196" y="102" fill="#dcefe2" font-size="9" text-anchor="middle" font-family="monospace">BEEP</text>
+          <text x="24" y="120" fill="#8fd3ac" font-size="7.5" font-family="monospace">TRAFFIC LIGHT BOARD</text>
+          <circle cx="236" cy="22" r="4" fill="#ffcf5a"/><circle cx="222" cy="22" r="4" fill="#6f8f7c"/>
+        </svg>
+      </div>
+      <div class="ledline"><span><i id="ledPwr"></i>电源</span><span><i id="ledRun"></i>运行</span><span><i id="ledBeep"></i>蜂鸣器</span></div>
+    </div>
+
+    <div class="card rbox">
+      <h4>工程文件树 <small>src/application/samples/peripheral</small></h4>
+      <div class="tree" id="fileTree"></div>
+    </div>
+
+    <div class="card rbox">
+      <h4>编译 / 烧录控制台 <small>HiSpark Studio</small></h4>
+      <div class="console" id="console"></div>
+    </div>
+  </aside>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+/* ============================================================
+ *  数据：任务书环节
+ * ============================================================ */
+const REF_C = `#include "pinctrl.h"
+#include "pwm.h"
+#include "gpio.h"
+#include "tcxo.h"
+#include "soc_osal.h"
+#include "app_init.h"
+
+#define PWM_CHANNEL          1
+#define PWM_GROUP_ID         1
+#define CONFIG_PWM_PIN       9   /* 底板 A9 -> 核心板 GPIO9 */
+#define CONFIG_PWM_PIN_MODE  1   /* 复用为 PWM 输出 */
+
+/* 32MHz PWM 时钟：周期 tick = low_time + high_time = 30000
+ * f = 32000000 / 30000 = 1067Hz，占空比 = 10000/30000 = 33% */
+#define BEEP_LOW_TIME_TICKS  20000
+#define BEEP_HIGH_TIME_TICKS 10000
+#define BEEP_ON_TIME_MS      3000   /* 响 3 秒后停止 */
+
+#define PWM_TASK_PRIO        24
+#define PWM_TASK_STACK_SIZE  0x1000
+
+static errcode_t pwm_sample_callback(uint8_t channel) {
+    osal_printk("[BEEP] PWM %d, cycle done.\\r\\n", channel);
+    return ERRCODE_SUCC;
+}
+
+static void *pwm_task(const char *arg) {
+    UNUSED(arg);
+    /* 具体实现 步骤一：初始化 PWM，配置 PWM 参数 */
+    pwm_config_t beep_cfg = {
+        BEEP_LOW_TIME_TICKS,   /* low_time  低电平 tick */
+        BEEP_HIGH_TIME_TICKS,  /* high_time 高电平 tick */
+        0,                     /* offset_time 相位 */
+        1,                     /* cycles  重复周期 */
+        true                   /* repeat=true 连续输出 */
+    };
+    uapi_pin_set_mode(CONFIG_PWM_PIN, CONFIG_PWM_PIN_MODE);
+    uapi_pwm_init();
+
+    /* 具体实现 步骤二：打开指定 PWM 设备 */
+    uapi_pwm_open(PWM_CHANNEL, &beep_cfg);
+    uapi_tcxo_delay_ms(100);
+    uapi_pwm_unregister_interrupt(PWM_GROUP_ID);
+    uapi_pwm_register_interrupt(PWM_GROUP_ID, pwm_sample_callback);
+    uint8_t channel_id = PWM_CHANNEL;
+    uapi_pwm_set_group(PWM_GROUP_ID, &channel_id, 1);
+    uapi_pwm_start(PWM_GROUP_ID);       /* 蜂鸣器开始鸣响 */
+
+    uapi_tcxo_delay_ms(BEEP_ON_TIME_MS); /* 关键：保持 3000ms */
+
+    uapi_pwm_close(PWM_CHANNEL);         /* 3 秒到，关闭通道 */
+    uapi_pwm_deinit();
+    uapi_pin_set_mode(CONFIG_PWM_PIN, 0);
+    uapi_gpio_set_dir(CONFIG_PWM_PIN, GPIO_DIRECTION_OUTPUT);
+    uapi_gpio_set_val(CONFIG_PWM_PIN, GPIO_LEVEL_LOW); /* 引脚拉低，彻底静音 */
+    return NULL;
+}
+
+static void pwm_entry(void) {
+    osal_task *task_handle = NULL;
+    osal_kthread_lock();
+    task_handle = osal_kthread_create((osal_kthread_handler)pwm_task, 0,
+                                      "PwmTask", PWM_TASK_STACK_SIZE);
+    if (task_handle != NULL) {
+        osal_kthread_set_priority(task_handle, PWM_TASK_PRIO);
+        osal_kfree(task_handle);
+    }
+    osal_kthread_unlock();
+}
+app_run(pwm_entry);`;
+
+const REF_CMAKE = `# 在 src/application/samples/peripheral/CMakeLists.txt 的
+# set(SOURCES "\${SOURCES}" PARENT_SCOPE) 上面一行加入：
+if(DEFINED CONFIG_SAMPLE_SUPPORT_BEEP)
+    add_subdirectory_if_exist(beep)
+endif()`;
+
+const REF_KCONFIG = `# 在 src/application/samples/peripheral/Kconfig 最后一行加入：
+config SAMPLE_SUPPORT_BEEP
+    bool
+    prompt "Support BEEP Sample."
+    default n
+    depends on ENABLE_PERIPHERAL_SAMPLE
+    help
+        This option means support BEEP Sample.`;
+
+const API_LIST = [
+  {n:'uapi_pwm_open()', d:'errcode_t uapi_pwm_open(uint8_t channel, const pwm_config_t *cfg);', f:'打开具有指定配置的 PWM 设备，把频率/占空比写进通道寄存器。', p:'channel：PWM 通道号；cfg：pwm_config_t 配置结构体', r:'ERRCODE_SUCC 成功，Other 失败', dep:'include\\driver\\pwm.h'},
+  {n:'uapi_pwm_close()', d:'errcode_t uapi_pwm_close(uint8_t channel);', f:'关闭指定 PWM 通道 —— 本实训「3 秒后停止」的核心 API。', p:'channel：PWM 通道号', r:'ERRCODE_SUCC 成功，Other 失败', dep:'include\\driver\\pwm.h'},
+  {n:'uapi_pwm_register_interrupt()', d:'errcode_t uapi_pwm_register_interrupt(uint8_t channel, pwm_callback_t callback);', f:'为 PWM 注册中断回调，一组波形输出完成后触发。', p:'channel：通道；callback：回调函数', r:'ERRCODE_SUCC 成功，Other 失败', dep:'include\\driver\\pwm.h'},
+  {n:'uapi_pwm_start()', d:'errcode_t uapi_pwm_start(uint8_t channel);', f:'开始输出 PWM 波形，蜂鸣器开始鸣响。', p:'channel：PWM 设备', r:'ERRCODE_SUCC 成功，Other 失败', dep:'include\\driver\\pwm.h'},
+  {n:'uapi_pwm_set_group()', d:'errcode_t uapi_pwm_set_group(uint8_t group, const uint8_t *ch, uint32_t len);', f:'把多个通道放进同一组，实现同步启动；channel_set 中每一位对应一个通道。', p:'group：组号；ch：通道数组；len：通道个数', r:'ERRCODE_SUCC 成功，Other 失败', dep:'include\\driver\\pwm.h'}
+];
+
+const ANA = [
+  {t:'① 硬件映射与通道宏 —— 为什么是 GPIO 9 / PWM 通道 1',
+   c:'#define PWM_CHANNEL          1\n#define PWM_GROUP_ID         1\n#define CONFIG_PWM_PIN       9   /* 底板 A9 -> 核心板 GPIO9 */\n#define CONFIG_PWM_PIN_MODE  1   /* 复用为 PWM 输出 */',
+   a:'交通灯板丝印 BEEP 接到底板 A9，底板 A9 对应核心板 GPIO 9。GPIO 是复用引脚，必须通过 uapi_pin_set_mode(9, 1) 把它从普通 IO 切换成 PWM 功能，之后在 GPIO9 上才能量到方波。PWM_CHANNEL=1 选择芯片内部第 1 路 PWM 发生器；PWM_GROUP_ID=1 是分组号，分组用于「一次启动多路同步输出」，这里只有 1 路。若这一步漏掉或引脚号写错，后面的 API 全部返回成功但蜂鸣器不会响 —— 这是实训中最常见的故障点。'},
+  {t:'② pwm_config_t —— 频率与占空比是怎么算出来的',
+   c:'pwm_config_t beep_cfg = {\n    20000,  /* low_time  ：低电平 tick 数 */\n    10000,  /* high_time ：高电平 tick 数 */\n    0,      /* offset_time：相位偏移 */\n    1,      /* cycles     ：重复周期 */\n    true    /* repeat     ：连续输出方波 */\n};',
+   a:'PWM 工作时钟为 32 MHz，即 1 tick = 1/32 000 000 s。一个完整周期 T = (low_time + high_time) tick = 30000 tick = 937.5 µs，所以 f = 32 000 000 / 30000 ≈ 1066.7 Hz，正好落在人耳最敏感的 1 kHz 附近，能听到清晰的「嘀」声。占空比 D = high_time / (low+high) = 10000 / 30000 ≈ 33.3%，决定音色与音量（方波谐波含量）。offset_time 是相位偏移，单路输出填 0。repeat=true 表示波形连续重复，这正是「持续鸣响」的前提；如果设成 false 且 cycles=1，只会输出一个脉冲，蜂鸣器只「嗒」一声。这 5 个字段就是任务书「具体实现 步骤一：初始化 PWM，配置 PWM 参数」的全部内容。'},
+  {t:'③ 初始化与打开设备 —— 具体实现 步骤一 / 步骤二',
+   c:'uapi_pin_set_mode(CONFIG_PWM_PIN, CONFIG_PWM_PIN_MODE);\nuapi_pwm_init();                       /* 步骤一：初始化 PWM */\nuapi_pwm_open(PWM_CHANNEL, &beep_cfg);  /* 步骤二：打开指定 PWM 设备 */',
+   a:'顺序不能颠倒：先做引脚复用（pinctrl），再初始化 PWM 模块时钟（init），最后把配置结构体写入通道（open）。uapi_pwm_open 只是「装载参数」，此时波形还没输出；真正的输出由 uapi_pwm_start 触发。这对应任务书「具体实现」两步：步骤一初始化 PWM、配置 PWM 参数；步骤二打开指定 PWM 设备。注意 open 的第二个参数是结构体指针，配置是在编译期/运行期一次性写入寄存器，后续要变调（演奏音乐）就必须重新 open 或改写寄存器。'},
+  {t:'④ 中断与分组 —— 为什么还要 set_group',
+   c:'uapi_pwm_unregister_interrupt(PWM_GROUP_ID);\nuapi_pwm_register_interrupt(PWM_GROUP_ID, pwm_sample_callback);\nuint8_t channel_id = PWM_CHANNEL;\nuapi_pwm_set_group(PWM_GROUP_ID, &channel_id, 1);\nuapi_pwm_start(PWM_GROUP_ID);',
+   a:'先注销旧回调再注册新回调，避免重复挂载；pwm_sample_callback 在每轮波形完成时打印日志，方便在串口监视器里确认 PWM 确实在跑。uapi_pwm_set_group 把通道 1 加入组 1，再把组整体 start，好处是多路 PWM 可以严格同步（例如 RGB 灯、多路蜂鸣器）。本例只有一路，但 SDK 的 V151 版本要求按组启动，因此这一步不能省。执行到 uapi_pwm_start 的瞬间，GPIO9 上出现 1067 Hz / 33% 的方波，无源蜂鸣器的膜片开始周期性振动 —— 蜂鸣器响了。'},
+  {t:'⑤ 3 秒定时 —— 本实训改造的关键控制代码',
+   c:'uapi_tcxo_delay_ms(BEEP_ON_TIME_MS);   /* BEEP_ON_TIME_MS = 3000 */',
+   a:'这是「响 3 秒以后就停止」唯一需要改动的地方：官方样例在 start 之后只延时 1000 ms，把它改成 3000 ms 即可让鸣响持续 3 秒。uapi_tcxo_delay_ms 基于芯片 TCXO 高精度时钟做忙等延时，不依赖操作系统 tick，定时准确且可在任务上下文里直接调用。由于 pwm_task 由 app_run 只执行一次、且函数末尾直接 return NULL 退出任务，所以 3 秒结束停止后不会再次进入循环，蜂鸣器不会重新响起来 —— 这一点同样重要：如果按 LED 实训那样写 while(1) 循环翻转，就变成「一直响」了。'},
+  {t:'⑥ 停止三重保险 —— 关闭通道 / 去初始化 / 引脚拉低',
+   c:'uapi_pwm_close(PWM_CHANNEL);   /* 关闭 PWM 通道 */\nuapi_pwm_deinit();              /* 释放 PWM 模块 */\nuapi_pin_set_mode(CONFIG_PWM_PIN, 0);\nuapi_gpio_set_dir(CONFIG_PWM_PIN, GPIO_DIRECTION_OUTPUT);\nuapi_gpio_set_val(CONFIG_PWM_PIN, GPIO_LEVEL_LOW);',
+   a:'只调用 close 在某些芯片版本上会把引脚留在波形最后一个电平；若恰好停在高电平，无源蜂鸣器会被直流偏置，有源蜂鸣器甚至会一直叫。因此停止采用三重保险：① uapi_pwm_close 关闭通道，停止波形输出；② uapi_pwm_deinit 去初始化模块、关时钟；③ 把 GPIO9 切回普通 GPIO 并强制输出低电平，让 BEEP 两端没有压差。三行 GPIO 代码是本实训在官方样例基础上新增的，保证「响 3 秒后就停止」在任何情况下都成立。'},
+  {t:'⑦ 任务创建与一次性执行',
+   c:'task_handle = osal_kthread_create((osal_kthread_handler)pwm_task,\n        0, "PwmTask", PWM_TASK_STACK_SIZE);\nosal_kthread_set_priority(task_handle, PWM_TASK_PRIO);\n...\napp_run(pwm_entry);',
+   a:'LiteOS 里不能直接把耗时操作放在系统初始化上下文，所以要创建独立任务 PwmTask（优先级 24、栈 0x1000）。osal_kthread_lock/unlock 用于锁调度，保证创建与优先级设置是原子的。app_run 是 SDK 的应用入口宏，系统启动后自动调用 pwm_entry 一次。整个程序是一次性任务：上电 → 响 3 秒 → 停止 → 任务退出，符合实训「听到声音且不一直响」的验收标准。'},
+  {t:'⑧ 从单调响声到演奏音乐 —— 变的是频率不是音量',
+   c:'// 板卡：改 low_time / high_time 即可得到不同音高\n// 262Hz -> 32000000/262 ≈ 122137 tick\n// 523Hz -> 32000000/523 ≈ 61185 tick\n// Arduino 等价写法：tone(BUZZER_PIN, 262); delay(200); noTone();',
+   a:'音乐的本质是「按时间顺序切换 PWM 频率」：每个音符用 f = 32 MHz / (low_time + high_time) 反算周期 tick，再把这一组值写进 PWM，保持一个节拍后停止、切换到下一个音符。DO(262)、RE(294)、MI(330)…DO_H(523) 只是不同频率；节拍 200/400 ms 决定每个频率保持多久；REST（0 Hz）表示休止符，直接关闭输出。网页实验台②用 Web Audio 的 PeriodicWave 生成同占空比方波，并同步绘制每个音符的 PWM 波形，原理与板卡完全一致。这也是为什么任务书把蜂鸣器放在「PWM」而不是「GPIO」章节。'}
+];
+
+/* 《数鸭子》—— 取自本机实训代码「按键播放音乐」 */
+const NOTE_F = {DO:262,RE:294,MI:330,FA:349,SO:392,LA:440,SI:494,DO_H:523,REST:0};
+const NOTE_CN = {DO:'1',RE:'2',MI:'3',FA:'4',SO:'5',LA:'6',SI:'7',DO_H:'i',REST:'0'};
+const Q=200,H=400,E=100;
+const PHRASES = [
+  {lyric:'门前大桥下', notes:[['MI',Q],['DO',Q],['MI',Q],['MI',Q],['DO',H]]},
+  {lyric:'游过一群鸭', notes:[['MI',Q],['MI',Q],['SO',Q],['LA',Q],['SO',Q],['REST',Q]]},
+  {lyric:'快来快来数一数', notes:[['LA',Q],['LA',Q],['LA',Q],['SO',Q],['FA',Q],['FA',Q],['FA',H]]},
+  {lyric:'二四六七八', notes:[['RE',Q],['MI',Q],['RE',Q],['DO',Q],['RE',Q],['REST',Q]]},
+  {lyric:'咕嘎 咕嘎', notes:[['MI',Q],['DO',Q],['REST',Q],['MI',Q],['DO',Q],['REST',Q]]},
+  {lyric:'真呀真多呀', notes:[['MI',Q],['MI',Q],['SO',Q],['LA',Q],['LA',Q],['REST',Q]]},
+  {lyric:'数不清到底多少鸭', notes:[['DO_H',Q],['SO',Q],['SO',Q],['LA',Q],['MI',H],['RE',Q],['DO',Q],['RE',Q],['MI',Q],['SO',H]]},
+  {lyric:'别考个鸭蛋抱回家', notes:[['DO_H',Q],['SO',Q],['SO',Q],['LA',Q],['MI',H],['RE',Q],['DO',Q],['RE',Q],['MI',Q],['SO',H]]}
+];
+const SCORE = [];
+PHRASES.forEach(p=>p.notes.forEach(n=>SCORE.push({name:n[0],freq:NOTE_F[n[0]],ms:n[1],lyric:p.lyric})));
+
+/* ============================================================
+ *  状态
+ * ============================================================ */
+function freshState(){
+  return {
+    step:0, view:'flow',
+    s1:false, s2:false, s3:false,
+    folderCreated:false, copied:false,
+    files:{
+      'pwm_example.c':{code:REF_C, submitted:false},
+      'CMakeLists.txt':{code:REF_CMAKE, submitted:false},
+      'Kconfig':{code:REF_KCONFIG, submitted:false}
+    },
+    beepEnabled:false, built:false, compilePassed:false, f7:false,
+    serialCfg:false, com:'COM5', burnStarted:false, resetDone:false, observed:false,
+    building:false
+  };
+}
+let S = freshState();
+
+/* 实训指导任务书原文（8 个步骤，逐字转录） */
+const TASK_QUOTES = [
+  '步骤一：在xxx\\src\\application\\samples\\peripheral文件夹新建一个sample文件夹，在peripheral上右键选择“新建文件夹”，创建Sample文件夹，例如名称“beep”',
+  '步骤二：将xxx\\vendor\\HiHope_NearLink_DK_WS63E_V03\\beep文件里面内容拷贝到步骤一创建的Sample文件夹中“beep”',
+  '步骤三：在xxx\\src\\application\\samples\\peripheral\\CMakeLists.txt文件中新增编译案例',
+  '步骤四：在xxx\\src\\application\\samples\\peripheral\\Kconfig文件中新增编译案例',
+  '步骤五：点击如下图标，选择“系统配置”，具体选择路径“Application/Enable the Sample of peripheral”，在弹出框中选择“support BEEP Sample”，点击Save，关闭弹窗。',
+  '步骤六：点击“build”或者“rebuild”编译',
+  '步骤七：编译和烧写',
+  '步骤八：烧录完成后，交通灯板上的蜂鸣器鸣响'
+];
+function quoteBox(i){return `<div class="quotebox"><b>任务书原文</b>${esc(TASK_QUOTES[i])}</div>`;}
+function taskOverview(){
+  return `<div class="taskall"><b>实训指导任务书 · 实验流程（共 8 步，本页逐步一比一还原）</b>
+    <ol>${TASK_QUOTES.map(q=>'<li>'+esc(q.replace(/^步骤[一二三四五六七八]：/,''))+'</li>').join('')}</ol></div>`;
+}
+
+/* 实验流程严格对应任务书 8 个步骤；任务书 1~3 节的知识内容放在「预备知识」标签页 */
+const STEPS = [
+  {id:'f1', g:'实训指导任务书 · 实验流程（8 步）', t:'步骤一：新建 sample 文件夹 “beep”', sub:'在 peripheral 上右键「新建文件夹」，创建 Sample 文件夹', done:()=>S.folderCreated, render:renderF1},
+  {id:'f2', g:'', t:'步骤二：拷贝 vendor/beep 内容并编辑源码', sub:'拷贝 3 个样例文件 → 编辑 pwm_example.c（响 3 秒后停止）→ 提交代码', done:()=>S.copied&&S.files['pwm_example.c'].submitted, render:renderF2},
+  {id:'f3', g:'', t:'步骤三：CMakeLists.txt 新增编译案例', sub:'编辑并提交 peripheral/CMakeLists.txt', done:()=>S.files['CMakeLists.txt'].submitted, render:renderF3},
+  {id:'f4', g:'', t:'步骤四：Kconfig 新增编译案例', sub:'编辑并提交 peripheral/Kconfig', done:()=>S.files['Kconfig'].submitted, render:renderF4},
+  {id:'f5', g:'', t:'步骤五：系统配置 → support BEEP Sample → Save', sub:'Application / Enable the Sample of peripheral → 勾选 → Save → 关闭弹窗', done:()=>S.beepEnabled, render:renderF5},
+  {id:'f6', g:'', t:'步骤六：点击 build / rebuild 编译', sub:'★ 三份代码提交后在此编译，编译通过才生成虚拟蜂鸣器', done:()=>S.built, render:renderF6},
+  {id:'f7', g:'', t:'步骤七：编译和烧写', sub:'查看编译产物 → 工程配置 serial → 程序加载 → 按 RESET → Burn SUCCESS', done:()=>S.f7&&S.serialCfg&&S.burnStarted&&S.resetDone, render:renderF7},
+  {id:'f8', g:'', t:'步骤八：烧录完成后，蜂鸣器鸣响', sub:'交通灯板 BEEP 鸣响 3 秒后自动停止 · 现象验收', done:()=>S.observed, render:renderF8}
+];
+
+/* ============================================================
+ *  工具函数
+ * ============================================================ */
+const $ = s=>document.querySelector(s);
+const esc = s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const sleep = ms=>new Promise(r=>setTimeout(r,ms));
+function toast(msg,type){const t=$('#toast');t.textContent=msg;t.className='toast show '+(type||'');clearTimeout(t._h);t._h=setTimeout(()=>t.className='toast',2600);}
+function log(msg,cls){const c=$('#console');const d=document.createElement('div');if(cls)d.className=cls;d.textContent=msg;c.appendChild(d);c.scrollTop=c.scrollHeight;}
+function pwmCalc(freq,duty){
+  const ticks=Math.round(32000000/freq);
+  const high=Math.round(ticks*duty/100);
+  return {ticks,high,low:ticks-high,Tus:1000000/freq,highUs:1000000*duty/100/freq};
+}
+function editorHTML(name,height){
+  const f=S.files[name];
+  return `<div class="editor">
+    <div class="edtop"><span class="fn">${esc(name)}</span>
+      <span class="st ${f.submitted?'ok':''}" id="st_${name.replace(/\W/g,'_')}">${f.submitted?'● 已提交到工程':'○ 未提交'}</span></div>
+    <textarea class="code" data-code="${esc(name)}" spellcheck="false" style="height:${height||330}px"></textarea>
+  </div>
+  <div class="btnrow">
+    <button class="btn" data-action="submit" data-file="${esc(name)}">提交代码</button>
+    <button class="btn gray sm" data-action="resetfile" data-file="${esc(name)}">恢复参考代码</button>
+    <span class="hint" style="color:var(--ink3);font-size:12px">提交后可继续编辑并重新提交；最终以「步骤六 · 编译」时的代码为准。</span>
+  </div>`;
+}
+function syncEditors(){
+  document.querySelectorAll('textarea.code').forEach(ta=>{ta.value=S.files[ta.dataset.code].code;});
+}
+function validate(name){
+  const c=S.files[name].code, p=[];
+  if(name==='pwm_example.c'){
+    const must=[['pwm.h','缺少 #include "pwm.h"'],['uapi_pwm_init','缺少 uapi_pwm_init()'],['uapi_pwm_open','缺少 uapi_pwm_open()'],['uapi_pwm_set_group','缺少 uapi_pwm_set_group()'],['uapi_pwm_start','缺少 uapi_pwm_start()'],['uapi_pwm_close','缺少 uapi_pwm_close()'],['3000','缺少 3000ms 延时（要求响 3 秒后停止）'],['uapi_pin_set_mode','缺少 uapi_pin_set_mode() 引脚复用'],['app_run','缺少 app_run() 应用入口']];
+    must.forEach(m=>{if(!c.includes(m[0]))p.push(m[1]);});
+    let bal=0;for(const ch of c){if(ch==='{')bal++;else if(ch==='}')bal--;}
+    if(bal!==0)p.push('花括号不匹配，C 语法检查未通过');
+    if(/\bwhile\s*\(\s*1\s*\)/.test(c))p.push('存在 while(1) 死循环，蜂鸣器将会一直响，不符合「响 3 秒后停止」');
+  }else if(name==='CMakeLists.txt'){
+    if(!c.includes('CONFIG_SAMPLE_SUPPORT_BEEP'))p.push('缺少 if(DEFINED CONFIG_SAMPLE_SUPPORT_BEEP) 条件');
+    if(!c.includes('add_subdirectory_if_exist(beep)'))p.push('缺少 add_subdirectory_if_exist(beep)');
+    if(!c.includes('endif'))p.push('缺少 endif()');
+  }else{
+    if(!c.includes('config SAMPLE_SUPPORT_BEEP'))p.push('缺少 config SAMPLE_SUPPORT_BEEP');
+    if(!c.includes('bool'))p.push('缺少 bool 类型声明');
+    if(!c.includes('prompt'))p.push('缺少 prompt 菜单提示');
+    if(!c.includes('default n'))p.push('缺少 default n');
+  }
+  return p;
+}
+function need(cond,msg){if(!cond){toast(msg,'err');log('✗ '+msg,'err');return false;}return true;}
+
+/* ============================================================
+ *  渲染：导航 / 状态 / 文件树
+ * ============================================================ */
+function renderNav(){
+  let html='',lastG='';
+  STEPS.forEach((s,i)=>{
+    if(s.g&&s.g!==lastG){html+=`<div class="navgroup">${esc(s.g)}</div>`;lastG=s.g;}
+    html+=`<button class="navitem ${i===S.step?'active':''} ${s.done()?'done':''}" data-step="${i}"><span class="dot"></span><span class="t">${esc(s.t)}</span></button>`;
+  });
+  $('#stepNav').innerHTML=html;
+  const done=STEPS.filter(s=>s.done()).length, pct=Math.round(done/STEPS.length*100);
+  $('#progBar').style.width=pct+'%';$('#progTxt').textContent=done+' / '+STEPS.length+' 已完成';$('#progPct').textContent=pct+'%';
+  const pill=$('#compilePill');
+  pill.textContent=S.compilePassed?'编译通过 · 实验台已解锁':'编译未通过';
+  pill.className='pill '+(S.compilePassed?'ok':'');
+  const tab=$('#tabLab');
+  tab.className=S.compilePassed?'unlocked':'locked';
+  $('#labLocked').classList.toggle('hidden',S.compilePassed);
+  $('#labMain').classList.toggle('hidden',!S.compilePassed);
+}
+function renderTree(){
+  const f=S.files;
+  let h=`<div class="root">▣ <span class="d">fbb_ws63/</span></div>
+  <div>└─ ▣ <span class="d">src/application/samples/peripheral/</span></div>
+  <div>　 ├─ ▣ <span class="muted">led/ · tricolored/ · buttondemo/</span></div>`;
+  if(!S.folderCreated) h+=`　 └─ <span class="muted">（还没有 beep 文件夹）</span>`;
+  else{
+    h+=`　 └─ ▣ <span class="d new">beep/ ${S.copied?'':'(空)'}</span>`;
+    if(S.copied){
+      h+=`　 　　 ├─ <span class="f ${f['CMakeLists.txt'].submitted?'mut':''}">CMakeLists.txt ${f['CMakeLists.txt'].submitted?'● 已提交':''}</span>
+      　 　　 ├─ <span class="f ${f['pwm_example.c'].submitted?'mut':''}">pwm_example.c ${f['pwm_example.c'].submitted?'● 已提交':''}</span>
+      　 　　 └─ <span class="f">README.md</span>`;
+    }
+  }
+  h+=`<div style="margin-top:8px;border:0;padding:0;font-size:10.5px;color:var(--ink3)">Kconfig 状态：${f['Kconfig'].submitted?'<span class="new">● 已提交</span>':'○ 未提交'}</div>`;
+  $('#fileTree').innerHTML=h;
+}
+function renderBoard(){
+  const active=(AUDIO.tone||AUDIO.music||S.observed&&S._observing);
+  $('#boardWrap').classList.toggle('active',!!active);
+  $('#ledPwr').className=S.compilePassed||S.folderCreated?'on':'';
+  $('#ledRun').className=S.compilePassed?'on':'';
+  $('#ledBeep').className=active?'on':'';
+  $('#boardStatus').textContent=active?'蜂鸣器鸣响中':(S.compilePassed?'已烧录 / 待运行':'未上电');
+}
+function renderAll(){renderNav();renderTree();renderBoard();renderStep();}
+function renderStep(){
+  const s=STEPS[S.step];
+  $('#crumb').textContent='实训指导任务书 · 实验流程　/　步骤 '+(S.step+1)+' / '+STEPS.length+'（共 8 步，一比一还原）';
+  $('#stepTitle').textContent=s.t;$('#stepSub').textContent=s.sub;
+  $('#stepBody').innerHTML=s.render();
+  syncEditors();
+  $('#footHint').textContent=s.done()?'✓ 本环节已完成':'完成本环节的操作后点击「下一步」';
+  $('#prevBtn').disabled=S.step===0;
+  $('#nextBtn').disabled=S.step===STEPS.length-1;
+  if(S.step===S.step&&typeof window.drawStatic==='function')window.drawStatic();
+}
+function goStep(i){S.step=Math.max(0,Math.min(STEPS.length-1,i));S.view='flow';switchView('flow');renderAll();window.scrollTo({top:0,behavior:'smooth'});}
+function switchView(v){
+  S.view=v;
+  $('#flowView').classList.toggle('hidden',v!=='flow');
+  $('#prepView').classList.toggle('hidden',v!=='prep');
+  $('#labView').classList.toggle('hidden',v!=='lab');
+  $('#tabFlow').classList.toggle('active',v==='flow');
+  $('#tabPrep').classList.toggle('active',v==='prep');
+  $('#tabLab').classList.toggle('active',v==='lab');
+  if(v==='prep')setTimeout(drawStatic,0);
+}
+
+/* ============================================================
+ *  各环节内容
+ * ============================================================ */
+function renderS1(){
+  return `
+  <h3 class="sec">任务书 1 · 基础知识</h3>
+  <div class="grid3">
+    <div class="box"><span class="tag">功能介绍</span><p class="tx">使用 <b>PWM</b> 控制交通灯板上的蜂鸣器鸣响；本实训要求：<b>鸣响 3 秒后停止</b>。</p></div>
+    <div class="box"><span class="tag">软件概述</span><p class="tx">PWM（脉冲宽度调制）通过调节<b>占空比</b>改变信号能量。占空比 = 一个周期内高电平时间 / 周期总时间；频率决定音调。</p></div>
+    <div class="box"><span class="tag">硬件概述</span><p class="tx">核心板 + 交通灯板。丝印 BEEP 与底板 <b>A9</b> 相连，底板 A9 对应核心板 <b>GPIO 9</b>。</p></div>
+  </div>
+  <h3 class="sec">硬件连接（一比一还原）</h3>
+  <div class="box" style="display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;padding:20px">
+    <div style="text-align:center"><div style="border:2px solid var(--brand);border-radius:9px;padding:12px 18px;background:#f3f6ff;font-weight:700">WS63E 核心板<br><small style="color:var(--ink2);font-weight:400">GPIO 9 / PWM 通道 1</small></div></div>
+    <div style="font-size:22px;color:var(--brand)">⟶</div>
+    <div style="text-align:center"><div style="border:2px solid #e0a63a;border-radius:9px;padding:12px 18px;background:#fff9ec;font-weight:700">底板 A9<br><small style="color:var(--ink2);font-weight:400">排针丝印 A9</small></div></div>
+    <div style="font-size:22px;color:var(--brand)">⟶</div>
+    <div style="text-align:center"><div style="border:2px solid var(--ok);border-radius:9px;padding:12px 18px;background:#effaf3;font-weight:700">交通灯板 BEEP<br><small style="color:var(--ink2);font-weight:400">无源蜂鸣器</small></div></div>
+  </div>
+  <h3 class="sec">PWM 原理交互演示（拖动看波形变化）</h3>
+  <div class="grid2">
+    <div class="box">
+      <div class="ctrl"><label>频率 f</label><input type="range" id="pwmF" min="200" max="2000" value="1067" step="1"><span class="outnum" id="pwmFV">1067 Hz</span></div>
+      <div class="ctrl"><label>占空比 D</label><input type="range" id="pwmD" min="10" max="90" value="33" step="1"><span class="outnum" id="pwmDV">33 %</span></div>
+      <p class="tx" id="pwmCalcTxt" style="font-family:var(--mono);font-size:12px"></p>
+    </div>
+    <div class="canvasbox"><canvas id="principleCanvas" style="height:150px"></canvas></div>
+  </div>
+  <h3 class="sec">真实工程路径对照（本机的实际目录）</h3>
+  <table class="t"><tr><th>环节</th><th>真实路径 / 文件</th></tr>
+    <tr><td>样例源码</td><td><code class="inl">D:\\VSCode\\fbb_ws63\\vendor\\HiHope_NearLink_DK_WS63E_V03\\demo\\beep\\pwm_example.c</code></td></tr>
+    <tr><td>工程样例</td><td><code class="inl">D:\\VSCode\\fbb_ws63\\src\\application\\samples\\peripheral\\beep\\</code></td></tr>
+    <tr><td>编译配置</td><td><code class="inl">...\\peripheral\\CMakeLists.txt</code> 与 <code class="inl">...\\peripheral\\Kconfig</code></td></tr>
+    <tr><td>指导手册</td><td><code class="inl">...\\doc\\星闪实验指导手册.md → 3、基础实验 / beep 蜂鸣器</code></td></tr>
+    <tr><td>固件产物</td><td><code class="inl">D:\\VSCode\\fbb_ws63\\src\\output\\ws63\\pktbin\\ws63-liteos-app.bin</code></td></tr>
+  </table>
+  <div class="btnrow"><button class="btn" data-action="s1">我已读并确认硬件连接</button><span class="chip ${S.s1?'on':''}" id="prepChip1">${S.s1?'✓ 已确认':'待确认'}</span></div>`;
+}
+function renderS2(){
+  let h=`<h3 class="sec">任务书 2 · 接口 API 介绍（点击展开）</h3><p class="tx">蜂鸣器实验只用到下面 5 个 PWM 驱动接口，全部来自 <code class="inl">include\\driver\\pwm.h</code>。</p>`;
+  API_LIST.forEach((a,i)=>{
+    h+=`<details class="ana" ${i===0?'open':''}><summary>${i+1}. ${esc(a.n)}　<span class="tag">${esc(a.f.slice(0,16))}…</span></summary><div class="body">
+      <pre class="codeview">${esc(a.d)}</pre>
+      <div class="kv"><span>功能</span><span>${esc(a.f)}</span></div>
+      <div class="kv"><span>参数</span><span>${esc(a.p)}</span></div>
+      <div class="kv"><span>返回值</span><span>${esc(a.r)}</span></div>
+      <div class="kv"><span>依赖</span><span><code class="inl">${esc(a.dep)}</code></span></div>
+    </div></details>`;
+  });
+  h+=`<div class="notecard">配套还需 <code class="inl">uapi_pin_set_mode()</code>（pinctrl.h）做引脚复用、<code class="inl">uapi_tcxo_delay_ms()</code>（tcxo.h）做毫秒延时、<code class="inl">app_run()</code>（app_init.h）注册应用入口。</div>
+  <div class="btnrow"><button class="btn" data-action="s2">完成接口学习</button><span class="chip ${S.s2?'on':''}" id="prepChip2">${S.s2?'✓ 已完成':'待完成'}</span></div>`;
+  return h;
+}
+function renderS3(){
+  return `<h3 class="sec">任务书 3 · 具体实现 步骤一：初始化 PWM，配置 PWM 参数</h3>
+  <p class="tx">SDK 用结构体 <code class="inl">pwm_config_t</code> 描述一路 PWM 波形，5 个字段依次是：低电平 tick、高电平 tick、相位、重复次数、是否循环。</p>
+  <pre class="codeview"><span class="kw">typedef struct</span> pwm_config {
+    uint32_t low_time;     <span class="cm">// 低电平 tick 数</span>
+    uint32_t high_time;    <span class="cm">// 高电平 tick 数</span>
+    uint32_t offset_time;  <span class="cm">// 相位偏移</span>
+    uint16_t cycles;       <span class="cm">// 重复周期 0~32767</span>
+    bool     repeat;       <span class="cm">// true = 连续输出</span>
+} pwm_config_t;</pre>
+  <div class="grid2">
+    <div class="box">
+      <h3 class="sec" style="margin-top:0">参数计算器（32 MHz 时钟）</h3>
+      <div class="ctrl"><label>目标频率</label><input type="range" id="cfgF" min="200" max="2000" value="1067" step="1"><span class="outnum" id="cfgFV">1067 Hz</span></div>
+      <div class="ctrl"><label>占空比</label><input type="range" id="cfgD" min="10" max="90" value="33" step="1"><span class="outnum" id="cfgDV">33 %</span></div>
+      <div class="kv"><span>周期 T</span><b id="cfgT">937.5 µs</b></div>
+      <div class="kv"><span>周期 tick = 32M / f</span><b id="cfgTicks">30000</b></div>
+      <div class="kv"><span>low_time</span><b id="cfgLow">20000</b></div>
+      <div class="kv"><span>high_time</span><b id="cfgHigh">10000</b></div>
+    </div>
+    <div class="box">
+      <h3 class="sec" style="margin-top:0">生成的配置代码</h3>
+      <pre class="codeview" id="cfgCode"></pre>
+      <div class="notecard">板卡样例取值：low_time = 20000，high_time = 10000 → f ≈ 1067 Hz、D ≈ 33%，正好是人耳容易听到的单调音。把 repeat 设为 true，波形才会连续输出，蜂鸣器才能持续响。</div>
+    </div>
+  </div>
+  <div class="btnrow"><button class="btn" data-action="s3">确认参数配置</button><span class="chip ${S.s3?'on':''}" id="prepChip3">${S.s3?'✓ 已确认':'待确认'}</span></div>`;
+}
+function renderS4(){
+  return `<h3 class="sec">任务书 3 · 具体实现 步骤二：打开指定 PWM 设备（完整控制代码）</h3>
+  <p class="tx">下面是板卡真实使用的 <b>完整控制代码（只读）</b>。与官方样例相比只改了两处：把鸣响延时从 1000 ms 改成 <code class="inl">BEEP_ON_TIME_MS = 3000</code>，并在 3 秒后增加「关闭通道 → 去初始化 → 引脚拉低」的停止保险。<b>可编辑版本与「提交代码」按钮在实验流程步骤二。</b></p>
+  <pre class="codeview">${esc(REF_C)}</pre>
+  <div class="btnrow"><button class="btn" data-go="f2">前往步骤二 · 编辑并提交 pwm_example.c</button></div>
+  <h3 class="sec">关键控制代码分析（分析内容）</h3>
+  <p class="tx">点击展开每一段：左侧是真实代码，右侧说明它在 PWM 控制链路中的作用。编译解锁后，实验台第 ③ 页还有配套的整链路时序表。</p>
+  ${ANA.map((a,i)=>`<details class="ana" ${i===0?'open':''}><summary>${esc(a.t)}</summary><div class="body"><pre class="codeview">${esc(a.c)}</pre><div class="box soft"><b>分析</b><p class="tx" style="margin-bottom:0">${esc(a.a)}</p></div></div></details>`).join('')}
+  <div class="notecard"><b>验收点：</b>① 有 <code class="inl">uapi_pwm_open / start / close</code> 完整链路；② 有 <code class="inl">3000</code> 毫秒延时；③ 没有 <code class="inl">while(1)</code> 死循环；④ 花括号配对。任何一项不满足，步骤六的编译都会报错，虚拟蜂鸣器不会生成。</div>`;
+}
+function renderF1(){
+  return `${quoteBox(0)}
+  <h3 class="sec"><span class="steplabel">步骤一</span>在 peripheral 下新建 sample 文件夹 “beep”</h3>
+  ${S.step===0?taskOverview():''}
+  <p class="tx">在 <code class="inl">xxx\\src\\application\\samples\\peripheral</code> 文件夹上右键选择「新建文件夹」，创建 Sample 文件夹，名称 <b>beep</b>。本机真实工程对应 <code class="inl">D:\\VSCode\\fbb_ws63\\src\\application\\samples\\peripheral\\</code>。</p>
+  <div class="box"><div class="tree" style="font-size:13px"><div class="root">▣ peripheral/</div><div>├─ ▣ led/</div><div>├─ ▣ tricolored/</div><div>├─ ▣ buttondemo/</div><div>├─ <span class="f">CMakeLists.txt</span>　<span class="f">Kconfig</span></div><div>└─ ${S.folderCreated?'<span class="new">▣ beep/　✓ 新建成功</span>':'<span class="muted">（待新建 beep/）</span>'}</div></div></div>
+  <div class="btnrow"><button class="btn ${S.folderCreated?'gray':''}" data-action="f1">${S.folderCreated?'重新新建文件夹':'新建文件夹 beep'}</button><span class="chip ${S.folderCreated?'on':''}">${S.folderCreated?'✓ 已创建':'未创建'}</span></div>
+  <div class="notecard">任务书 1~3 节（基础知识、接口 API、具体实现）放在顶部「预备知识 · 具体实现」标签页，随时可查阅，<b>不占用下面 8 步实验流程</b>。</div>`;
+}
+function renderF2(){
+  return `${quoteBox(1)}
+  <h3 class="sec"><span class="steplabel">步骤二</span>拷贝 vendor/beep 内容 → 编辑并提交 pwm_example.c</h3>
+  <p class="tx">把 <code class="inl">xxx\\vendor\\HiHope_NearLink_DK_WS63E_V03\\beep</code>（本机实际路径为 <code class="inl">...\\demo\\beep</code>）文件夹里的全部内容，拷贝到步骤一创建的 <b>beep</b> 文件夹中。拷贝得到的核心源码就是 <code class="inl">pwm_example.c</code>，本实训要把它改成「响 3 秒后停止」。</p>
+  <div class="grid2">
+    <div class="box"><b>源（vendor 样例）</b><div class="tree" style="margin-top:8px"><div class="root">▣ beep/</div><div>├─ CMakeLists.txt</div><div>├─ pwm_example.c</div><div>└─ README.md</div></div></div>
+    <div class="box"><b>目标（samples/peripheral/beep）</b><div class="tree" style="margin-top:8px"><div class="root">▣ beep/</div>${S.copied?'<div>├─ <span class="new">CMakeLists.txt ✓</span></div><div>├─ <span class="new">pwm_example.c ✓</span></div><div>└─ <span class="new">README.md ✓</span></div>':'<div>└─ <span class="muted">（空文件夹）</span></div>'}</div></div>
+  </div>
+  <div class="btnrow"><button class="btn ${S.copied?'gray':''}" data-action="f2">${S.copied?'重新拷贝':'拷贝 3 个文件到 beep/'}</button><span class="chip ${S.copied?'on':''}">${S.copied?'✓ 已拷贝':'未拷贝'}</span></div>
+  ${!S.folderCreated?'<div class="notecard">注意：尚未完成步骤一（没有 beep 文件夹），拷贝会失败。请先回到步骤一。</div>':''}
+  <h3 class="sec">拷贝得到的源码：pwm_example.c（可编辑，必须提交）</h3>
+  <p class="tx">在代码框里确认 <code class="inl">BEEP_ON_TIME_MS 3000</code> 与停止三重保险，然后点击 <b>提交代码</b>。提交成功后步骤二才算完成。</p>
+  ${editorHTML('pwm_example.c',380)}
+  <div class="notecard"><b>验收点：</b>① 有 <code class="inl">uapi_pwm_open / start / close</code> 完整链路；② 有 <code class="inl">3000</code> 毫秒延时；③ 没有 <code class="inl">while(1)</code> 死循环；④ 花括号配对。任何一项不满足，步骤六的编译都会报错，虚拟蜂鸣器不会生成。</div>`;
+}
+function renderF3(){
+  return `${quoteBox(2)}
+  <h3 class="sec"><span class="steplabel">步骤三</span>CMakeLists.txt 新增编译案例</h3>
+  <p class="tx">在 <code class="inl">xxx\\src\\application\\samples\\peripheral\\CMakeLists.txt</code> 中新增编译案例；不知道加在哪，就加在 <code class="inl">set(SOURCES "\${SOURCES}" PARENT_SCOPE)</code> 的<b>上面一行</b>。</p>
+  ${editorHTML('CMakeLists.txt',160)}
+  <div class="notecard">作用：当 Kconfig 定义了 <code class="inl">CONFIG_SAMPLE_SUPPORT_BEEP</code> 时，CMake 才会把 <code class="inl">beep/</code> 目录加入编译；否则即使文件拷进来了也不会被编译进固件。</div>`;
+}
+function renderF4(){
+  return `${quoteBox(3)}
+  <h3 class="sec"><span class="steplabel">步骤四</span>Kconfig 新增编译案例</h3>
+  <p class="tx">在 <code class="inl">xxx\\src\\application\\samples\\peripheral\\Kconfig</code> 中新增编译案例；不知道加在哪，就加在<b>最后一行</b>。</p>
+  ${editorHTML('Kconfig',210)}
+  <div class="notecard">作用：在 menuconfig 里生成一个可勾选的菜单项 <code class="inl">Support BEEP Sample.</code>，勾选后生成 <code class="inl">CONFIG_SAMPLE_SUPPORT_BEEP</code> 宏，供步骤三的 CMake 判断。</div>`;
+}
+function renderF5(){
+  return `${quoteBox(4)}
+  <h3 class="sec"><span class="steplabel">步骤五</span>系统配置 → support BEEP Sample → Save</h3>
+  <p class="tx">点击系统配置图标，选择路径 <code class="inl">Application / Enable the Sample of peripheral</code>，在弹出框中勾选 <b>support BEEP Sample</b>，点击 <b>Save</b>，关闭弹窗。</p>
+  <div class="box" style="max-width:520px">
+    <div style="font-family:var(--mono);font-size:12px;color:var(--ink3);border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:10px">Application → Enable the Sample of peripheral</div>
+    <label style="display:flex;align-items:center;gap:10px;padding:7px 0;font-size:13px"><input type="checkbox" id="cfgBeep" ${S.beepEnabled?'checked':''}> Support LED Sample. <span class="muted" style="color:var(--ink3)">(已启用)</span></label>
+    <label style="display:flex;align-items:center;gap:10px;padding:7px 0;font-size:13px"><input type="checkbox" id="cfgBeep2" ${S.beepEnabled?'checked':''}> <b>support BEEP Sample</b>　<span class="tag g">本次实训</span></label>
+    <div class="btnrow"><button class="btn" data-action="f5">Save 保存配置</button><span class="chip ${S.beepEnabled?'on':''}">${S.beepEnabled?'✓ CONFIG_SAMPLE_SUPPORT_BEEP=1':'未保存'}</span></div>
+  </div>
+  <div class="notecard">保存后可在 <code class="inl">output/ws63/acore/ws63-liteos-app/mconfig.h</code> 中看到 <code class="inl">#define CONFIG_SAMPLE_SUPPORT_BEEP 1</code>。</div>`;
+}
+function renderF6(){
+  const ready=S.folderCreated&&S.copied&&S.beepEnabled&&Object.values(S.files).every(f=>f.submitted);
+  return `${quoteBox(5)}
+  <h3 class="sec"><span class="steplabel">步骤六</span>点击 build / rebuild 编译（关键门禁）</h3>
+  <div class="box ${ready?'ok':'warn'}"><b>提交与编译前置检查</b>
+    <div class="kv"><span>步骤一 新建 beep 文件夹</span><b>${S.folderCreated?'✓ 完成':'✗ 未完成'}</b></div>
+    <div class="kv"><span>步骤二 拷贝样例文件 + 提交 pwm_example.c</span><b>${S.copied&&S.files['pwm_example.c'].submitted?'✓ 完成':'✗ 未完成'}</b></div>
+    <div class="kv"><span>步骤三 提交 CMakeLists.txt</span><b>${S.files['CMakeLists.txt'].submitted?'✓ 完成':'✗ 未完成'}</b></div>
+    <div class="kv"><span>步骤四 提交 Kconfig</span><b>${S.files['Kconfig'].submitted?'✓ 完成':'✗ 未完成'}</b></div>
+    <div class="kv"><span>步骤五 menuconfig 勾选并 Save</span><b>${S.beepEnabled?'✓ 已保存':'✗ 未保存'}</b></div>
+  </div>
+  <p class="tx">点击 <b>build / rebuild</b> 后，网页内的编译器会对你提交的 3 份代码做语法与依赖检查；<b>只有编译通过，才会生成虚拟蜂鸣器、驱动电脑蜂鸣器发声并解锁实验台</b>。</p>
+  <div class="btnrow">
+    <button class="btn" data-action="build" ${S.building?'disabled':''}>${S.building?'编译中…':'build / rebuild 编译'}</button>
+    <button class="btn gray sm" data-action="goto" data-step="6">查看编译与烧写 →</button>
+    <span class="chip ${S.compilePassed?'on':''}">${S.compilePassed?'✓ 编译通过 · 实验台已解锁':'未通过'}</span>
+  </div>
+  <div class="bar"><i id="buildBar" style="width:${S.compilePassed?'100%':'0%'}"></i></div>
+  <div class="box soft" style="font-family:var(--mono);font-size:11.5px;color:var(--ink2);line-height:1.8">
+    $ python build.py ws63-liteos-app<br>
+    -- Build target: ws63_liteos_app<br>
+    [1/1285] Building C object .../beep/pwm_example.c.obj<br>
+    ...<br>
+    ######### Build target:ws63_liteos_app success<br>
+    SUCCESS Took 84.71 seconds
+  </div>`;
+}
+function renderF7(){
+  return `${quoteBox(6)}
+  <h3 class="sec"><span class="steplabel">步骤七</span>编译和烧写（编译产物 → 工程配置 → 程序加载 → RESET）</h3>
+  <div class="box ok"><b style="color:var(--ok);font-size:16px">SUCCESS · Build target: ws63_liteos_app success</b>
+    <p class="tx" style="margin-bottom:0">步骤六编译完成，已生成可烧录镜像。查看右侧控制台中的完整编译日志。</p></div>
+  <table class="t"><tr><th>产物</th><th>路径</th><th>大小</th></tr>
+    <tr><td>应用固件</td><td><code class="inl">output/ws63/pktbin/ws63-liteos-app.bin</code></td><td>1 298 240 B</td></tr>
+    <tr><td>flashboot</td><td><code class="inl">output/ws63/pktbin/flashboot.bin</code></td><td>49 408 B</td></tr>
+    <tr><td>loaderboot</td><td><code class="inl">output/ws63/pktbin/loaderboot.bin</code></td><td>30 912 B</td></tr>
+    <tr><td>NV 参数</td><td><code class="inl">output/ws63/pktbin/ws63_all_nv.bin</code></td><td>8 192 B</td></tr>
+  </table>
+  <div class="notecard">本机已用 HiSpark Studio 工具链（riscv32-linux-musl-gcc + cmake + ninja）对改造后的 <code class="inl">pwm_example.c</code> 真实执行过一次全量编译：<b>Build target: ws63_liteos_app success，84.71 s</b>，产出的固件已放在随附的 <code class="inl">board_code/firmware/</code> 目录，可直接拿去烧录。</div>
+  <div class="box"><b>编译通过 → 虚拟蜂鸣器已生成</b><p class="tx" style="margin-bottom:0">切换到顶部「虚拟蜂鸣器实验台」，可以做：单调响声 + PWM 波形、演奏《数鸭子》+ PWM 波形、关键控制代码分析。</p></div>
+  <div class="btnrow"><button class="btn" data-action="f7">① 确认编译产物</button><button class="btn sec2" data-action="openlab">打开实验台</button><span class="chip ${S.f7?'on':''}">${S.f7?'✓ 已确认':'待确认'}</span></div>
+
+  <h3 class="sec">② 工程配置：程序加载 / serial / comxxx / 115200</h3>
+  <p class="tx">在 HiSpark Studio 中点击「工程配置」→ 选择「程序加载」→ 传输方式 <b>serial</b> → 端口 <code class="inl">comxxx</code>（设备管理器中查看；本机可识别 COM3~COM7）→ 波特率 115200。</p>
+  <div class="box" style="max-width:520px">
+    <div class="kv"><span>传输方式</span><span><label><input type="radio" name="trans" checked> serial</label>　<label><input type="radio" name="trans" disabled> JTAG</label></span></div>
+    <div class="kv"><span>端口</span><span><select id="comSel">${['COM3','COM4','COM5','COM6','COM7'].map(c=>`<option ${S.com===c?'selected':''}>${c}</option>`).join('')}</select></span></div>
+    <div class="kv"><span>波特率</span><span><select><option>115200</option><option>921600</option></select></span></div>
+    <div class="btnrow"><button class="btn" data-action="f8">保存工程配置</button><span class="chip ${S.serialCfg?'on':''}">${S.serialCfg?'✓ '+esc(S.com)+' / 115200':'未保存'}</span></div>
+  </div>
+
+  <h3 class="sec">③ 点击「程序加载」开始烧录</h3>
+  <p class="tx">控制台出现 <code class="inl">Connecting, please reset device...</code> 时，进行第 ④ 步复位开发板。</p>
+  <div class="btnrow"><button class="btn" data-action="f9" ${S.burnStarted?'disabled':''}>程序加载 / 开始烧录</button><span class="chip ${S.burnStarted?'on':''}">${S.burnStarted?'✓ 已进入 Connecting 状态':'未开始'}</span></div>
+  <pre class="codeview">${S.burnStarted?'Connecting, please reset device...\nWaiting for device reset ...':'[HiSpark Studio] BurnTool ready.'}</pre>
+
+  <h3 class="sec">④ 按 RESET，等待烧录结束</h3>
+  <p class="tx">出现「Connecting, please reset device...」时，<b>按一下开发板右侧的 RESET（RST）按键</b>，等待进度走到 100%（真实板卡必须手按，网页里用按钮模拟）。</p>
+  <div class="grid2">
+    <div class="box" style="text-align:center;padding:20px">
+      <div style="width:70px;height:70px;border:3px solid var(--brand);border-radius:50%;margin:0 auto 12px;display:grid;place-items:center;font-weight:800;color:var(--brand)">RST</div>
+      <button class="btn ${S.resetDone?'gray':''}" data-action="f10">按下 RESET 键</button>
+    </div>
+    <div class="box"><b>烧录进度</b><div class="bar"><i style="width:${S.resetDone?'100%':(S.burnStarted?'62%':'0%')}"></i></div>
+      <pre class="codeview">${S.resetDone?'Erasing ... 100%\nWriting  ... 100%\nVerifying ... OK\nBurn SUCCESS!':'Connecting, please reset device...'}</pre></div>
+  </div>`;
+}
+function renderF8(){
+  return `${quoteBox(7)}
+  <h3 class="sec"><span class="steplabel">步骤八</span>烧录完成后，交通灯板上的蜂鸣器鸣响</h3>
+  <p class="tx">烧录完成后复位开发板，交通灯板上的蜂鸣器鸣响 <b>3 秒</b>，随后自动停止。点击下面按钮，网页会同步演示板卡时序，并驱动<b>电脑蜂鸣器</b>发出同样的单调响声。</p>
+  <div class="grid2">
+    <div class="box"><b>板卡预期日志（串口监视器）</b>
+      <pre class="codeview" style="margin-top:10px">[BEEP] ON : f=1067Hz, duty=33%, keep 3000 ms
+[BEEP] PWM 1, cycle done.  (×N)
+[BEEP] OFF: PWM closed after 3000 ms,
+            pin driven LOW.</pre></div>
+    <div class="box"><b>验收标准</b>
+      <ul class="clean"><li>能听到清晰单调的「嘀——」声</li><li>持续约 3 秒</li><li>3 秒后完全静音，不再重复</li><li>GPIO9 输出 1067 Hz / 33% 方波</li><li>串口打印 ON / OFF 两条日志</li></ul></div>
+  </div>
+  <div class="btnrow"><button class="btn green" data-action="f11">通电运行 / 观察现象（响 3 秒）</button><button class="btn sec2" data-action="openlab">打开虚拟蜂鸣器实验台</button><span class="chip ${S.observed?'on':''}">${S.observed?'✓ 验收通过':'待运行'}</span></div>
+  <div class="box ${S.observed?'ok':''}" style="margin-top:14px"><b id="obsTitle">${S.observed?'实训完成':'等待运行'}</b><p class="tx" id="obsTxt" style="margin-bottom:0">${S.observed?'蜂鸣器已按任务书要求鸣响 3 秒并停止，任务书 8 个步骤全部完成。可到「虚拟蜂鸣器实验台」继续做单调响声 + PWM 波形、音乐演奏 + PWM 波形、关键控制代码分析。':'点击上方按钮开始 3 秒演示。'}</p></div>`;
+}
+
+/* ============================================================
+ *  预备知识标签页（任务书 1~3 节）
+ * ============================================================ */
+function refreshPrepChips(){
+  const m=[['prepChip1',S.s1,'✓ 已确认','待确认'],['prepChip2',S.s2,'✓ 已完成','待完成'],['prepChip3',S.s3,'✓ 已确认','待确认']];
+  m.forEach(x=>{const el=document.getElementById(x[0]);if(el){el.textContent=x[1]?x[2]:x[3];el.className='chip'+(x[1]?' on':'');}});
+}
+function renderPrep(){
+  const blocks=[
+    ['任务书 1 · 基础知识','功能介绍 / 软件概述 / 硬件概述 / 硬件安装 · PWM 原理交互演示',renderS1],
+    ['任务书 2 · 接口 API 介绍','5 个 PWM 驱动 API 的定义、参数、返回值与依赖',renderS2],
+    ['任务书 3 · 具体实现 步骤一','初始化 PWM、配置 PWM 参数 · pwm_config_t 与频率/占空比换算',renderS3],
+    ['任务书 3 · 具体实现 步骤二','打开指定 PWM 设备 · 完整控制代码 + 关键控制代码分析',renderS4]
+  ];
+  $('#prepBody').innerHTML=blocks.map(b=>`<div class="prepblock"><h2>${b[0]}</h2><p class="pd">${b[1]}</p>${b[2]()}</div>`).join('');
+  refreshPrepChips();
+}
+
+/* ============================================================
+ *  交互动作
+ * ============================================================ */
+const ACTIONS={
+  s1(){S.s1=true;log('✓ 基础知识确认：BEEP → A9 → GPIO9','ok');toast('已确认硬件连接','ok');refreshPrepChips();},
+  s2(){S.s2=true;log('✓ 接口 API 学习完成（5 个 PWM API）','ok');toast('接口学习完成','ok');refreshPrepChips();},
+  s3(){S.s3=true;log('✓ PWM 参数配置确认：30000 tick / 1067Hz / 33%','ok');toast('参数配置已确认','ok');refreshPrepChips();},
+  f1(){S.folderCreated=true;S.copied=false;log('[新建] src/application/samples/peripheral/beep/','cmd');toast('beep 文件夹已创建','ok');renderAll();},
+  f2(){if(!need(S.folderCreated,'步骤一未完成：请先新建 beep 文件夹'))return;S.copied=true;log('[拷贝] vendor/.../demo/beep → samples/peripheral/beep','cmd');log('  CMakeLists.txt / pwm_example.c / README.md','i');toast('3 个样例文件已拷贝','ok');renderAll();},
+  f5(){S.beepEnabled=$('#cfgBeep2').checked&&$('#cfgBeep').checked||$('#cfgBeep2').checked;if(!S.beepEnabled){toast('请勾选 support BEEP Sample','err');log('✗ menuconfig 未勾选 support BEEP Sample','err');return;}log('[Kconfig] CONFIG_SAMPLE_SUPPORT_BEEP=1 → mconfig.h','ok');toast('系统配置已保存','ok');renderAll();},
+  submit(btn){const name=btn.dataset.file;S.files[name].code=$(`textarea[data-code="${name}"]`).value;S.files[name].submitted=true;const p=validate(name);log(`[提交] ${name} 已写入工程${p.length?'（静态检查发现 '+p.length+' 处问题）':'，静态检查通过'}`,p.length?'w':'ok');toast(name+' 已提交'+(p.length?'，静态检查有问题':'，静态检查通过'),p.length?'err':'ok');renderAll();},
+  resetfile(btn){const map={'pwm_example.c':REF_C,'CMakeLists.txt':REF_CMAKE,'Kconfig':REF_KCONFIG};S.files[btn.dataset.file].code=map[btn.dataset.file];renderStep();toast('已恢复参考代码');log('[恢复] '+btn.dataset.file+' ← 参考代码','i');},
+  async build(){
+    if(S.building)return;S.building=true;renderStep();
+    log('$ python build.py ws63-liteos-app','cmd');
+    const lines=[
+      ['-- BUILD_PLATFORM: windows','i'],['-- Configuring done / Generating done','i'],
+      ['[1/1285] Building C object .../beep/pwm_example.c.obj','i'],
+      ['[2/1285] Building C object .../led/led_example.c.obj','i'],
+      ['[1285/1285] Linking C executable ws63-liteos-app','i']
+    ];
+    const bar=$('#buildBar');
+    for(let i=0;i<lines.length;i++){await sleep(180);log(lines[i][0],lines[i][1]);if(bar)bar.style.width=Math.round((i+1)/lines.length*80)+'%';}
+    const problems=[];
+    if(!S.folderCreated)problems.push('步骤一：找不到 sample 目录 beep/');
+    if(!S.copied)problems.push('步骤二：beep 目录为空，未拷贝到样例源码');
+    if(!S.beepEnabled)problems.push('步骤五：CONFIG_SAMPLE_SUPPORT_BEEP 未定义，beep 未加入编译');
+    ['pwm_example.c','CMakeLists.txt','Kconfig'].forEach(n=>{
+      if(!S.files[n].submitted)problems.push(n+' 未提交代码');
+      else validate(n).forEach(p=>problems.push(n+': error: '+p));
+    });
+    await sleep(260);
+    if(problems.length){
+      problems.forEach(p=>log('error: '+p,'err'));
+      log('######### Build target:ws63-liteos-app FAILED','err');
+      log('FAILED: 请回到对应环节修正代码后重新 build','err');
+      if(bar)bar.style.width='0%';
+      toast('编译失败：请在控制台查看错误','err');
+    }else{
+      log('######### Build target:ws63_liteos_app success','ok');
+      log('SUCCESS Took 84.71 seconds · ws63-liteos-app.bin 1298240 B','ok');
+      log('packet success! → output/ws63/pktbin/','ok');
+      if(bar)bar.style.width='100%';
+      S.built=true;S.compilePassed=true;
+      toast('编译通过！虚拟蜂鸣器已生成，实验台解锁','ok');
+    }
+    S.building=false;renderAll();
+  },
+  f7(){S.f7=true;log('✓ 编译产物已确认','ok');toast('产物已确认','ok');renderAll();},
+  openlab(){switchView('lab');},
+  f8(){S.com=$('#comSel').value;S.serialCfg=true;log(`[工程配置] mode=serial port=${S.com} baud=115200`,'cmd');toast('工程配置已保存','ok');renderAll();},
+  f9(){if(!need(S.serialCfg,'请先完成步骤八：保存工程配置'))return;S.burnStarted=true;log('[BurnTool] Connecting, please reset device...','w');toast('已进入 Connecting 状态，请复位开发板','ok');renderAll();},
+  f10(){if(!need(S.burnStarted,'请先完成步骤九：点击程序加载'))return;S.resetDone=true;log('[BurnTool] Erasing / Writing / Verifying ...','i');log('Burn SUCCESS!','ok');toast('烧录完成','ok');renderAll();},
+  f11(){if(!need(S.resetDone,'请先完成步骤十：复位并烧录'))return;
+    S.observed=true;S._observing=true;renderAll();
+    log('[BEEP] ON : f=1067Hz, duty=33%, keep 3000 ms','ok');
+    toast('蜂鸣器鸣响中…3 秒后停止','ok');
+    playToneOnce(1067,33,3000,0.22);
+    setTimeout(()=>{S._observing=false;log('[BEEP] OFF: PWM closed after 3000 ms, pin driven LOW.','ok');renderBoard();toast('3 秒到，蜂鸣器已停止','ok');},3000);
+  },
+  goto(btn){goStep(parseInt(btn.dataset.step,10));}
+};
+
+/* 事件委托 */
+document.addEventListener('click',e=>{
+  const nav=e.target.closest('[data-step]');
+  if(nav&&!nav.dataset.action){goStep(parseInt(nav.dataset.step,10));return;}
+  const go=e.target.closest('[data-go]');
+  if(go){const i=STEPS.findIndex(s=>s.id===go.dataset.go);goStep(i<0?0:i);return;}
+  const a=e.target.closest('[data-action]');
+  if(a&&ACTIONS[a.dataset.action]){ACTIONS[a.dataset.action](a);return;}
+  const tab=e.target.closest('[data-view]');
+  if(tab){if(tab.dataset.view==='lab'&&!S.compilePassed){toast('请先在步骤六完成代码提交并编译通过','err');goStep(STEPS.findIndex(s=>s.id==='f6'));return;}switchView(tab.dataset.view);return;}
+  const lt=e.target.closest('[data-lab]');
+  if(lt){document.querySelectorAll('[data-lab]').forEach(b=>b.classList.toggle('active',b===lt));
+    ['tone','music','analysis'].forEach(k=>$('#lab'+k[0].toUpperCase()+k.slice(1)).classList.toggle('hidden',k!==lt.dataset.lab));
+    drawStatic();return;}
+});
+document.addEventListener('input',e=>{
+  const t=e.target;
+  if(t.classList.contains('code')){S.files[t.dataset.code].code=t.value;return;}
+  const ids=['pwmF','pwmD','cfgF','cfgD','tFreq','tDuty','tVol'];
+  if(ids.includes(t.id)){updateSliderUI();drawStatic();return;}
+});
+
+/* ============================================================
+ *  PWM 计算器 UI
+ * ============================================================ */
+function sliderVal(id){const el=document.getElementById(id);return el?+el.value:null;}
+function updateSliderUI(){
+  const pf=sliderVal('pwmF'),pd=sliderVal('pwmD');
+  if(pf!==null){$('#pwmFV').textContent=pf+' Hz';$('#pwmDV').textContent=pd+' %';
+    const c=pwmCalc(pf,pd);$('#pwmCalcTxt').textContent=`T = ${c.Tus.toFixed(1)} µs ｜ 周期 = ${c.ticks} tick ｜ low_time = ${c.low} ｜ high_time = ${c.high}`;}
+  const cf=sliderVal('cfgF'),cd=sliderVal('cfgD');
+  if(cf!==null){
+    $('#cfgFV').textContent=cf+' Hz';$('#cfgDV').textContent=cd+' %';
+    const c=pwmCalc(cf,cd);
+    $('#cfgT').textContent=c.Tus.toFixed(1)+' µs';$('#cfgTicks').textContent=c.ticks;
+    $('#cfgLow').textContent=c.low;$('#cfgHigh').textContent=c.high;
+    $('#cfgCode').innerHTML=`<span class="kw">pwm_config_t</span> cfg = {<br>　 ${c.low}, <span class="cm">// low_time</span><br>　 ${c.high}, <span class="cm">// high_time</span><br>　 0, <span class="cm">// offset_time</span><br>　 1, <span class="cm">// cycles</span><br>　 <span class="nm">true</span> <span class="cm">// repeat</span><br>};`;
+  }
+  const tf=sliderVal('tFreq'),td=sliderVal('tDuty'),tv=sliderVal('tVol');
+  if(tf!==null){
+    $('#tFreqV').textContent=tf+' Hz';$('#tDutyV').textContent=td+' %';$('#tVolV').textContent=tv+' %';
+    const c=pwmCalc(tf,td);
+    $('#mT').textContent=c.Tus.toFixed(1)+' µs';$('#mTicks').textContent=c.ticks;
+    $('#mLow').textContent=c.low;$('#mHigh').textContent=c.high;
+    $('#mHighUs').textContent=c.highUs.toFixed(1)+' µs';
+    $('#mF2').textContent=tf+' Hz';$('#mD2').textContent=td+' %';
+  }
+}
+
+/* ============================================================
+ *  波形绘制
+ * ============================================================ */
+function fit(cv){const dpr=window.devicePixelRatio||1,w=cv.clientWidth||600,h=cv.clientHeight||200;
+  if(cv.width!==Math.round(w*dpr)||cv.height!==Math.round(h*dpr)){cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);}
+  const c=cv.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,w,h);return {c,w,h};}
+function drawPWM(cv,freq,duty,phase,opt){
+  if(!cv)return;const {c,w,h}=fit(cv),opt2=opt||{};
+  c.fillStyle='#fbfdff';c.fillRect(0,0,w,h);
+  const yH=38,yL=h-38,left=46,right=w-14,plotW=right-left;
+  c.strokeStyle='#e8edf7';c.lineWidth=1;
+  for(let x=left;x<=right;x+=Math.max(40,plotW/10)){c.beginPath();c.moveTo(x,14);c.lineTo(x,h-14);c.stroke();}
+  for(let y=24;y<h-14;y+=28){c.beginPath();c.moveTo(left,y);c.lineTo(right,y);c.stroke();}
+  c.setLineDash([4,4]);c.strokeStyle='#c9d4ea';
+  [yH,yL].forEach(y=>{c.beginPath();c.moveTo(left,y);c.lineTo(right,y);c.stroke();});
+  c.setLineDash([]);
+  c.fillStyle='#8b97ad';c.font='11px Consolas,monospace';
+  c.fillText('1',18,yH+4);c.fillText('0',18,yL+4);
+  c.fillText('高电平',left+2,yH-8);c.fillText('低电平',left+2,yL+16);
+  if(!freq||freq<=0){
+    c.strokeStyle='#9aa7bd';c.lineWidth=2.5;c.beginPath();c.moveTo(left,yL);c.lineTo(right,yL);c.stroke();
+    c.fillStyle='#8b97ad';c.fillText(opt2.restLabel||'REST 休止符 · 无 PWM 输出',left+12,yL-14);
+    return;
+  }
+  const windowMs=8,cycles=freq*windowMs/1000,pxPer=w?plotW/cycles:60;
+  const hiW=pxPer*duty/100,shift=(phase||0)%pxPer;
+  c.lineWidth=2.4;c.strokeStyle='#3355d8';c.lineJoin='round';
+  const first=Math.floor(-shift/pxPer)-1,last=Math.ceil(plotW/pxPer)+1;
+  let d='';
+  for(let i=first;i<=last;i++){
+    const x0=left+i*pxPer+shift, x1=x0+hiW, x2=x0+pxPer;
+    if(x2<left||x0>right)continue;
+    d+=`M ${Math.max(left,x0)} ${yL} L ${Math.max(left,x0)} ${yH} L ${Math.min(right,x1)} ${yH} L ${Math.min(right,x1)} ${yL} L ${Math.min(right,x2)} ${yL} `;
+  }
+  c.stroke(new Path2D(d));
+  // 第一个完整周期的标注
+  const bx=left+((pxPer-shift)%pxPer);
+  if(bx+pxPer<right){
+    c.strokeStyle='#f0a53a';c.lineWidth=1.3;c.setLineDash([3,3]);
+    c.beginPath();c.moveTo(bx,yH-18);c.lineTo(bx+hiW,yH-18);c.stroke();
+    c.beginPath();c.moveTo(bx,yL+22);c.lineTo(bx+pxPer,yL+22);c.stroke();c.setLineDash([]);
+    c.fillStyle='#c47a10';c.font='10.5px Consolas,monospace';
+    c.fillText('t_H',bx+hiW/2-9,yH-23);c.fillText('T',bx+pxPer/2-3,yL+34);
+  }
+  if(opt2.label){c.fillStyle='#3355d8';c.font='bold 11px Consolas,monospace';c.fillText(opt2.label,right-170,20);}
+}
+function drawTimeline(progress,idx){
+  const cv=$('#musicTimeline');if(!cv)return;const {c,w,h}=fit(cv);
+  c.fillStyle='#fbfdff';c.fillRect(0,0,w,h);
+  const left=8,right=w-8,plotW=right-left,base=h-18,top=14;
+  c.strokeStyle='#e8edf7';c.beginPath();c.moveTo(left,base);c.lineTo(right,base);c.stroke();
+  const total=SCORE.reduce((a,n)=>a+n.ms,0);let x=left;
+  SCORE.forEach((n,i)=>{
+    const bw=n.ms/total*plotW;
+    const bh=n.freq?8+(n.freq-262)/(523-262)*(h-52):0;
+    c.fillStyle=n.freq?(i===idx?'#f0a53a':'#3355d8'):'#c3ccdd';
+    c.globalAlpha=i===idx?1:.62;
+    c.fillRect(x,base-bh-2,Math.max(1,bw-1),bh||3);
+    c.globalAlpha=1;x+=bw;
+  });
+  const px=left+Math.max(0,Math.min(1,progress||0))*plotW;
+  c.strokeStyle='#e0574a';c.lineWidth=2;c.beginPath();c.moveTo(px,top);c.lineTo(px,base);c.stroke();
+  c.fillStyle='#8b97ad';c.font='10.5px Consolas,monospace';c.fillText('0',left,h-4);c.fillText((total/1000).toFixed(1)+' s',right-34,h-4);
+}
+function drawStatic(){
+  updateSliderUI();
+  const pf=sliderVal('pwmF'),pd=sliderVal('pwmD');
+  if(pf!==null)drawPWM($('#principleCanvas'),pf,pd,0,{label:'PWM 原理示意'});
+  const tf=sliderVal('tFreq'),td=sliderVal('tDuty');
+  if(tf!==null)drawPWM($('#toneCanvas'),AUDIO.tone?tf:tf,td,AUDIO.phase,{label:AUDIO.tone?'输出中 · '+tf+' Hz':'待机波形 · '+tf+' Hz'});
+  const mi=AUDIO.music?AUDIO.musicIndex:-1;
+  const cur=mi>=0?SCORE[mi]:null;
+  drawPWM($('#musicCanvas'),cur?cur.freq:0,cur?parseFloat($('#mDuty').value)*100:50,AUDIO.phase,{restLabel:'REST 休止符 · 关闭 PWM 输出',label:cur?NOTE_CN[cur.name]+' / '+cur.freq+' Hz':''});
+  drawTimeline(AUDIO.musicProgress||0,mi);
+}
+
+/* ============================================================
+ *  Web Audio：驱动电脑蜂鸣器
+ * ============================================================ */
+const AUDIO={ctx:null,tone:null,music:null,phase:0,musicIndex:-1,musicProgress:0,toneEnd:0};
+function ac(){if(!AUDIO.ctx){const C=window.AudioContext||window.webkitAudioContext;AUDIO.ctx=new C();}
+  if(AUDIO.ctx.state==='suspended')AUDIO.ctx.resume();return AUDIO.ctx;}
+function pwave(ctx,duty,n){const N=n||32,real=new Float32Array(N+1),imag=new Float32Array(N+1);
+  for(let k=1;k<=N;k++){const a=2*Math.PI*k*duty;real[k]=Math.sin(a)/(k*Math.PI);imag[k]=(1-Math.cos(a))/(k*Math.PI);}
+  return ctx.createPeriodicWave(real,imag,{disableNormalization:false});}
+function volume(){return (sliderVal('tVol')||22)/100*0.38;}
+function startTone(freq,duty,durMs){
+  stopTone();const ctx=ac(),o=ctx.createOscillator(),g=ctx.createGain();
+  o.setPeriodicWave(pwave(ctx,duty/100));o.frequency.setValueAtTime(freq,ctx.currentTime);
+  const v=volume(),t=ctx.currentTime;
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+0.012);
+  o.connect(g);g.connect(ctx.destination);o.start();
+  AUDIO.tone={o,g,start:t,dur:durMs?durMs/1000:0};
+  if(durMs){AUDIO.toneEnd=performance.now()+durMs;g.gain.setValueAtTime(v,t+durMs/1000-0.03);g.gain.linearRampToValueAtTime(0,t+durMs/1000);o.stop(t+durMs/1000+0.03);}
+  $('#toneState').textContent=durMs?`状态：鸣响中（${durMs/1000} 秒后自动停止） · ${freq} Hz / ${duty}%`:`状态：持续鸣响中 · ${freq} Hz / ${duty}%`;
+  renderBoard();
+}
+function stopTone(){
+  const t=AUDIO.tone;if(!t)return;
+  const ctx=AUDIO.ctx,now=ctx.currentTime;
+  try{t.g.gain.cancelScheduledValues(now);t.g.gain.setValueAtTime(t.g.gain.value,now);t.g.gain.linearRampToValueAtTime(0,now+0.02);t.o.stop(now+0.03);}catch(e){}
+  AUDIO.tone=null;AUDIO.toneEnd=0;
+  const ts=$('#toneState');if(ts)ts.textContent='状态：已停止（PWM 关闭，引脚拉低，蜂鸣器静音）';
+  renderBoard();
+}
+function playToneOnce(freq,duty,dur,volFixed){
+  stopTone();const ctx=ac(),o=ctx.createOscillator(),g=ctx.createGain();
+  o.setPeriodicWave(pwave(ctx,duty/100));o.frequency.value=freq;
+  const t=ctx.currentTime,v=volFixed||volume();
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+0.012);
+  g.gain.setValueAtTime(v,t+dur/1000-0.03);g.gain.linearRampToValueAtTime(0,t+dur/1000);
+  o.connect(g);g.connect(ctx.destination);o.start(t);o.stop(t+dur/1000+0.03);
+  // 复用 AUDIO.tone 让波形动画与开发板指示同步
+  AUDIO.tone={o,g,start:t,dur:dur/1000};AUDIO.toneEnd=performance.now()+dur;
+  renderBoard();
+}
+function stopMusic(){
+  const m=AUDIO.music;if(!m)return;
+  m.nodes.forEach(o=>{try{o.stop();}catch(e){}});
+  AUDIO.music=null;AUDIO.musicIndex=-1;AUDIO.musicProgress=0;
+  $('#musicBar').style.width='0%';$('#curLyric').textContent='—';$('#curNote').textContent='—';
+  $('#curFreq').textContent='—';$('#curTick').textContent='—';
+  renderBoard();
+}
+function playMusic(){
+  stopTone();stopMusic();
+  const ctx=ac(),speed=parseFloat($('#mSpeed').value),duty=parseFloat($('#mDuty').value);
+  let t=ctx.currentTime+0.08;const nodes=[],times=[],durs=[];
+  SCORE.forEach(n=>{
+    const dur=n.ms/1000/speed;
+    if(n.freq>0){
+      const o=ctx.createOscillator(),g=ctx.createGain();
+      o.setPeriodicWave(pwave(ctx,duty));o.frequency.setValueAtTime(n.freq,t);
+      const v=volume();
+      g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+0.012);
+      g.gain.setValueAtTime(v,t+Math.max(0.02,dur-0.03));g.gain.linearRampToValueAtTime(0,t+dur);
+      o.connect(g);g.connect(ctx.destination);o.start(t);o.stop(t+dur+0.02);nodes.push(o);
+    }
+    times.push(t);durs.push(dur);t+=dur;
+  });
+  AUDIO.music={nodes,times,durs,start:ctx.currentTime+0.08,end:t,speed,duty};
+  log('[Web Audio] 演奏《数鸭子》开始 · '+SCORE.length+' 个音符','ok');
+  renderBoard();
+}
+/* 主循环 */
+function loop(){
+  const now=performance.now();AUDIO.phase=(AUDIO.phase+1.1)%100000;
+  if(AUDIO.tone&&AUDIO.toneEnd&&now>=AUDIO.toneEnd){stopTone();}
+  if(AUDIO.music){
+    const m=AUDIO.music,ctx=AUDIO.ctx,el=ctx.currentTime-m.start;
+    if(el>=m.end-m.start){stopMusic();log('[Web Audio] 演奏结束','i');}
+    else{
+      let acc=0,idx=0;for(let i=0;i<m.durs.length;i++){if(acc+m.durs[i]>el){idx=i;break;}acc+=m.durs[i];idx=i;}
+      AUDIO.musicIndex=idx;AUDIO.musicProgress=el/(m.end-m.start);
+      const n=SCORE[idx];
+      $('#musicBar').style.width=(AUDIO.musicProgress*100).toFixed(1)+'%';
+      $('#curLyric').textContent=n.lyric;
+      $('#curNote').textContent=n.freq?NOTE_CN[n.name]+'（'+n.name.replace('_H','高音')+'）':'休止符 0';
+      $('#curFreq').textContent=n.freq?n.freq+' Hz / T='+(1000000/n.freq).toFixed(1)+' µs':'无输出';
+      const c=n.freq?pwmCalc(n.freq,parseFloat($('#mDuty').value)*100):null;
+      $('#curTick').textContent=c?c.low+' / '+c.high:'—';
+    }
+  }
+  const mCount=$('#mCount');
+  if(mCount)mCount.textContent=AUDIO.tone&&AUDIO.toneEnd?Math.max(0,(AUDIO.toneEnd-now)/1000).toFixed(1)+' s':'--';
+  if(S.view==='lab'&&S.compilePassed){
+    const toneC=$('#toneCanvas'),musC=$('#musicCanvas');
+    if(toneC&&$('#labTone')&&!$('#labTone').classList.contains('hidden'))
+      drawPWM(toneC,sliderVal('tFreq')||1067,sliderVal('tDuty')||33,AUDIO.phase,{label:AUDIO.tone?'输出中':'待机波形'});
+    if(musC&&$('#labMusic')&&!$('#labMusic').classList.contains('hidden')){
+      const idx=AUDIO.musicIndex,n=idx>=0?SCORE[idx]:null;
+      drawPWM(musC,n?n.freq:0,n?parseFloat($('#mDuty').value)*100:50,AUDIO.phase,{restLabel:'REST 休止符 · 关闭 PWM 输出',label:n?NOTE_CN[n.name]+' / '+n.freq+' Hz':''});
+      drawTimeline(AUDIO.musicProgress,AUDIO.musicIndex);
+    }
+  }
+  if($('#principleCanvas')&&S.view==='prep')drawPWM($('#principleCanvas'),sliderVal('pwmF')||1067,sliderVal('pwmD')||33,AUDIO.phase,{label:'PWM 原理示意'});
+  requestAnimationFrame(loop);
+}
+
+/* ============================================================
+ *  实验台按钮 / 初始化
+ * ============================================================ */
+document.getElementById('tone3s').addEventListener('click',()=>{startTone(sliderVal('tFreq')||1067,sliderVal('tDuty')||33,3000);toast('蜂鸣器鸣响 3 秒后自动停止','ok');});
+document.getElementById('toneStart').addEventListener('click',()=>{startTone(sliderVal('tFreq')||1067,sliderVal('tDuty')||33,0);toast('持续鸣响，点击「停止」关闭','ok');});
+document.getElementById('toneStop').addEventListener('click',()=>{stopTone();toast('已停止');});
+document.getElementById('toneDefault').addEventListener('click',()=>{$('#tFreq').value=1067;$('#tDuty').value=33;updateSliderUI();toast('已恢复板卡参数 1067Hz / 33%');});
+document.getElementById('musicPlay').addEventListener('click',()=>{playMusic();toast('开始演奏《数鸭子》','ok');});
+document.getElementById('musicStop').addEventListener('click',()=>{stopMusic();toast('演奏已停止');});
+['tFreq','tDuty'].forEach(id=>document.getElementById(id).addEventListener('input',()=>{
+  if(AUDIO.tone&&!AUDIO.toneEnd){stopTone();startTone(sliderVal('tFreq'),sliderVal('tDuty'),0);}
+}));
+document.getElementById('resetBtn').addEventListener('click',()=>{
+  if(!confirm('确定要重置全部实训进度吗？已提交的代码将恢复为参考代码。'))return;
+  stopTone();stopMusic();S=freshState();$('#console').innerHTML='';
+  log('[HiSpark Studio] 实训环境已重置','i');renderAll();refreshPrepChips();switchView('flow');toast('已重置');
+});
+document.getElementById('prevBtn').addEventListener('click',()=>goStep(S.step-1));
+document.getElementById('nextBtn').addEventListener('click',()=>goStep(S.step+1));
+
+function buildAnalysis(){
+  $('#anaList').innerHTML=ANA.map((a,i)=>`<details class="ana" ${i===0?'open':''}><summary>${esc(a.t)}</summary><div class="body"><pre class="codeview">${esc(a.c)}</pre><div class="box soft"><b>分析</b><p class="tx" style="margin-bottom:0">${esc(a.a)}</p></div></div></details>`).join('');
+  $('#scoreChips').innerHTML=PHRASES.map(p=>`<span class="chip">${esc(p.lyric)}：${p.notes.map(n=>NOTE_CN[n[0]]).join(' ')}</span>`).join('');
+}
+renderPrep();
+buildAnalysis();
+log('[HiSpark Studio] 实训环境就绪：HiHope_NearLink_DK_WS63E_V03','i');
+log('[任务书] 实验流程严格 8 步（步骤一~步骤八）；任务书 1~3 节见「预备知识」标签页','i');
+log('[提示] 先在步骤二/三/四提交 3 份代码，再在步骤六 build 编译通过，才会生成虚拟蜂鸣器','w');
+renderAll();
+updateSliderUI();
+drawStatic();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
