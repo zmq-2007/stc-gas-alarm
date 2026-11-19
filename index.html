@@ -477,7 +477,7 @@ details.ana pre{margin:0 0 10px}
             <div class="m"><small>核心板热点 SSID / 密码</small><b>H / 12345678</b></div>
             <div class="m"><small>AP 地址 / 信道 / 加密</small><b>192.168.63.1 · CH6 · WPA2-PSK</b></div>
             <div class="m"><small>手机 MAC / DHCP 分配到 IP</small><b>A8:6D:AA:3F:21:70 · 192.168.63.3</b></div>
-            <div class="m"><small>真实编译 / 固件产物</small><b>380.43s · packet success! · 7 镜像</b></div>
+            <div class="m"><small>真实编译 / 固件产物</small><b>55.89s · packet success! · 1 301 120 B</b></div>
           </div>
           <div class="serialbox rlog" id="wifiResultLog">
             <div class="cmd" data-ri="0">[WIFIAP] ==== WiFi AP (SoftAP) Sample Start ====</div>
@@ -501,10 +501,15 @@ details.ana pre{margin:0 0 10px}
             <div class="ok" data-ri="18">[WIFIAP] SSID=H  PASSWORD=12345678  AP_IP=192.168.63.1</div>
             <div class="ok" data-ri="19">[WIFIAP] [DHCP] phone MAC=A8:6D:AA:3F:21:70  IP=192.168.63.3</div>
             <div class="ok" data-ri="20">[WIFIAP] LINK UP: phone -&gt; AP(H)  AP=192.168.63.1  phone=192.168.63.3</div>
-            <div class="sep" data-ri="21">---- 手机关闭 WLAN / 离开热点之后 ----</div>
-            <div class="w" data-ri="22">[WIFIAP] [EVENT] STA LEAVE MAC=A8:6D:AA:3F:21:70</div>
-            <div class="w" data-ri="23">[WIFIAP] 手机已断开 / PHONE DISCONNECTED</div>
-            <div class="i" data-ri="24">[WIFIAP] Connected stations: 0</div>
+            <div class="sep" data-ri="21">[WIFIAP] ---------------- RESULT / 实训验收 ----------------</div>
+            <div class="ok" data-ri="22">[WIFIAP] SSID=H  PASSWORD=12345678  CHANNEL=6  SECURITY=WPA/WPA2-PSK</div>
+            <div class="ok" data-ri="23">[WIFIAP] AP=192.168.63.1  phone MAC=A8:6D:AA:3F:21:70  IP=192.168.63.3</div>
+            <div class="hit" data-ri="24">[WIFIAP] ****** 手机连接热点成功 / PHONE CONNECTED HOTSPOT SUCCESS ******</div>
+            <div class="sep" data-ri="25">[WIFIAP] ---------------- RESULT END ----------------</div>
+            <div class="sep" data-ri="26">---- 手机关闭 WLAN / 离开热点之后 ----</div>
+            <div class="w" data-ri="27">[WIFIAP] [EVENT] STA LEAVE MAC=A8:6D:AA:3F:21:70</div>
+            <div class="w" data-ri="28">[WIFIAP] 手机已断开 / PHONE DISCONNECTED</div>
+            <div class="i" data-ri="29">[WIFIAP] Connected stations: 0</div>
           </div>
           <div class="rbtns">
             <button class="btn sm" data-wact="wreplay">回放串口输出</button>
@@ -513,9 +518,9 @@ details.ana pre{margin:0 0 10px}
             <span class="hint" style="color:var(--ink3);font-size:12px">下方 11 步是可重新演练的完整流程；上方是本次实训的结论。</span>
           </div>
           <div class="rnote">
-            说明：以上逐行对应改造后 <code>softap_sample.c</code> 里 <code>PRINT</code> 语句的输出格式，MAC / IP / RSSI 随实际手机变化；本机未实际烧录采集，属预期核对样本。<br>
-            真实串口采集：<code>python wifiap_serial_monitor.py --port COM7 --baud 115200</code>（115200 / 8N1，自动识别「手机连接热点成功」并另存 .log）。<br>
-            固件：本机已用 HiSpark Studio 工具链真实全量编译，<code>380.43 s · packet success!</code> · <code>ws63-liteos-app.bin 1 300 800 B</code> · 7 个镜像在 <code>wifiap_lab/firmware/</code>。<br>
+            说明：以上逐行对应改造后 <code>softap_sample.c</code> 里 <code>PRINT</code> 语句的输出格式，MAC / IP / RSSI 随实际手机变化；其中 <code>RESULT / 实训验收</code> 段是手机拿到 DHCP 地址后由固件集中打印的汇总信息。本机未实际烧录采集，属预期核对样本。<br>
+            真实串口采集：<code>python wifiap_serial_monitor.py --port COM7 --baud 115200 --until-success</code>（115200 / 8N1，自动识别「手机连接热点成功」与 RESULT END 并另存 .log）。<br>
+            固件：本机已用 HiSpark Studio 工具链真实编译两次（首次全量 380.43 s，本次增量 <code>55.89 s · packet success!</code>），<code>ws63-liteos-app.bin 1 301 120 B</code> · 7 个镜像在 <code>wifiap_lab/firmware/</code>。<br>
             烧录：出现 <code>Connecting, please reset device...</code> 时需人工按一下开发板右侧 RESET（脚本无法代按）；随后手机 WLAN 连接 <code>H / 12345678</code>，串口即出现上面的成功信息。
           </div>
         </div>
@@ -1731,6 +1736,12 @@ async function wConnectPhone(){
   wSerialPush('[WIFIAP] [DHCP] phone MAC=A8:6D:AA:3F:21:70  IP=192.168.63.3','ok');
   await sleep(360);
   wSerialPush('[WIFIAP] LINK UP: phone -> AP(H)  AP=192.168.63.1  phone=192.168.63.3','ok');
+  await sleep(320);
+  wSerialPush('[WIFIAP] ---------------- RESULT / 实训验收 ----------------','cmd');
+  wSerialPush('[WIFIAP] SSID=H  PASSWORD=12345678  CHANNEL=6  SECURITY=WPA/WPA2-PSK','i');
+  wSerialPush('[WIFIAP] AP=192.168.63.1  phone MAC=A8:6D:AA:3F:21:70  IP=192.168.63.3','i');
+  wSerialPush('[WIFIAP] ****** 手机连接热点成功 / PHONE CONNECTED HOTSPOT SUCCESS ******','hit');
+  wSerialPush('[WIFIAP] ---------------- RESULT END ----------------','cmd');
   W.connected=true;W.phone='connected';W.phoneIp='192.168.63.3';W.connecting=false;
   renderPhoneUI();renderWifiNav();renderWifiBoard();
   wlog('[验收] 串口收到「手机连接热点成功」+ DHCP IP=192.168.63.3','ok');
