@@ -1,0 +1,507 @@
+warning: SAMPLE_SUPPORT_LED (defined at application/samples/peripheral/Kconfig:460) defined with multiple prompts in single location
+warning: SAMPLE_SUPPORT_LED (defined at application/samples/peripheral/Kconfig:460) defined with more than one help text -- only the last one will be used
+Not searching for unused variables given on the command line.
+-- BUILD_PLATFORM: windows
+GEN_TARGET_SRC = D:/VSCode/fbb_ws63/src/output/ws63/acore/acore.c
+PRECOMPILE_TARGET = D:/VSCode/fbb_ws63/src/output/ws63/acore/acore.etypes
+TARGET_INCLUDE = D:/VSCode/fbb_ws63/src/middleware/chips/ws63/nv/nv_config/include;D:/VSCode/fbb_ws63/src/middleware/utils/common_headers/native
+BGTP_PROJECT=ws63
+BGTP_ROM_VERSION=false
+BGTP_DEVICE_ONLY=false
+BG COMMON BTH_ROM_LIST:__null__
+BTH_ROM_LIST:__null__
+-- project_name:
+-- project_name:
+-- Configuring done
+-- Generating done
+-- Build files have been written to: D:/VSCode/fbb_ws63/src/output/ws63/acore/ws63-flashboot
+[1/12] Building C object CMakeFiles/flashboot.dir/temp/__null___.c.obj
+[2/12] Generating NV_SRC
+[3/12] Linking C executable flashboot.elf
+Memory region         Used Size  Region Size  %age Used
+           STACK:          9 KB         9 KB    100.00%
+            SRAM:        1544 B       119 KB      1.27%
+FLASHBOOT_ROM_ADDR:       49348 B        64 KB     75.30%
+[4/12] post_build:gen bin file
+[5/12] cmd.exe /C "cd /D D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-flashboot && D:\VSCode\fbb_ws63\src\tools\bin\compiler\riscv\cc_riscv32_musl_105\cc_riscv32_musl_win\bin\riscv32-linux-musl-nm.exe -S -n --format=sysv flashboot.elf > flashboot.nm"
+[6/12] cmd.exe /C "cd /D D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-flashboot && D:\VSCode\fbb_ws63\src\tools\bin\compiler\riscv\cc_riscv32_musl_105\cc_riscv32_musl_win\bin\riscv32-linux-musl-objdump.exe -d -m riscv flashboot.elf > flashboot.asm"
+[7/12] cmd.exe /C "cd /D D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-flashboot && D:\VSCode\fbb_ws63\src\tools\bin\compiler\riscv\cc_riscv32_musl_105\cc_riscv32_musl_win\bin\riscv32-linux-musl-objcopy.exe -O ihex flashboot.elf flashboot_std.hex"
+[8/12] cmd.exe /C "cd /D D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-flashboot && D:\VSCode\tools\python\python.exe D:/VSCode/fbb_ws63/src/build/script/utils/create_hex.py flashboot.bin flashboot.hex"
+[9/12] cmd.exe /C "cd /D D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-flashboot && D:\VSCode\fbb_ws63\src\tools\bin\compiler\riscv\cc_riscv32_musl_105\cc_riscv32_musl_win\bin\riscv32-linux-musl-objdump.exe -x -S -l flashboot.elf > flashboot.lst"
+[10/12] MEM_LIMIT
+[11/12] cmd.exe /C "cd /D D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-flashboot && D:\VSCode\tools\python\python.exe D:/VSCode/fbb_ws63/src/build/script/utils/elftodu.py D:/VSCode/fbb_ws63/src flashboot.elf D:/VSCode/fbb_ws63/src/tools/bin/compiler/riscv/cc_riscv32_musl_105/cc_riscv32_musl_win/bin/riscv32-linux-musl-nm.exe > flashboot.du && D:\VSCode\tools\python\python.exe D:/VSCode/fbb_ws63/src/build/script/utils/mem_stats.py flashboot.lst flashboot.du D:/VSCode/fbb_ws63/src/output/ws63/acore/ws63-flashboot/linker.lds ws63 > flashboot.mem"
+[12/12] ws63 image sign
+generate params.bin...
+Build params success!
+params.bin size:  1024
+params.bin generate successfully!!!
+params_sign.bin generate successfully!!!
+generate fill root_pubk.bin
+merge out path:  D:\VSCode\fbb_ws63\src\build\config\target_config\ws63\sign_config
+root_params_sign.bin generate successfully!!!
+sign name:  D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-ssb/ssb.bin
+D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-ssb/ssb.bin size:  20928
+D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-ssb/ssb.bin  generated successfully!!!
+ssb_sign.bin generated successfully!!!
+D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-flashboot/flashboot.bin size:  49348
+flash_sign.bin generated successfully!!!
+D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-loaderboot\loaderboot.bin size:  30912
+loaderboot_sign.bin generated successfully!!!
+merge out path:  D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-loaderboot
+root_loaderboot_sign.bin generated successfully!!!
+sign name:  D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-liteos-app/ws63-liteos-app.bin
+D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-liteos-app/ws63-liteos-app.bin size:  1301120
+D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-liteos-app/ws63-liteos-app.bin  generated successfully!!!
+sign name:  D:\VSCode\fbb_ws63\src\output\ws63\acore\boot_bin\ws63-liteos-mfg.bin
+D:\VSCode\fbb_ws63\src\output\ws63\acore\boot_bin\ws63-liteos-mfg.bin size:  1263872
+D:\VSCode\fbb_ws63\src\output\ws63\acore\boot_bin\ws63-liteos-mfg.bin  generated successfully!!!
+[!][copy_files_to_interim] File `D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-ssb\ssb.bin` not found, will skip it !
+[!][copy_files_to_interim] File `D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-ssb\ssb_sign.bin` not found, will skip it !
+[!][copy_files_to_interim] File `D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-liteos-hilink\ws63-liteos-hilink.bin` not found, will skip it !
+[!][copy_files_to_interim] File `D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-liteos-hilink\ws63-liteos-hilink-sign.bin` not found, will skip it !
+current work direction:  D:\VSCode\fbb_ws63\src
+NV file reading:  D:\VSCode\fbb_ws63\src\output\ws63\acore\nv_bin\temp\cfg\acore_nv.json
+nv xml writing in:  D:\VSCode\fbb_ws63\src\output\ws63\database\cco\system\hdbcfg\mss_nvi_db.xml
+struct file reading:  D:\VSCode\fbb_ws63\src\output\ws63\acore\nv_bin\temp\acore.etypes
+struct writing in: D:\VSCode\fbb_ws63\src\output\ws63\database\cco\system\nv\nv_struct_def.txt
+python path:  D:\VSCode\tools\python\python.exe
+[ws63][acore] run custom cmd success!
+D:\VSCode\fbb_ws63\src\build\script\.\..\..\config.in
+D:\VSCode\fbb_ws63\src
+No change to Kconfig header in 'D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-flashboot\mconfig.h'
+######### Build target:ws63_flashboot success
+ws63-flashboot takes 3.798362 s
+python path:  D:\VSCode\tools\python\python.exe
+copy_files_to_interim ing...
+['D:\\VSCode\\tools\\python\\python.exe', 'D:\\VSCode\\fbb_ws63\\src\\build\\config\\target_config\\ws63\\script\\copy_files_to_interim.py', 'D:\\VSCode\\fbb_ws63\\src', 'D:\\VSCode\\fbb_ws63\\src\\output']
+copy_files_to_interim done!
+['D:\\VSCode\\tools\\python\\python.exe', 'D:\\VSCode\\fbb_ws63\\src\\build\\config\\target_config\\ws63\\script\\nv_handle.py', 'D:\\VSCode\\fbb_ws63\\src\\output']
+[ws63][acore] run custom cmd success!
+warning: SAMPLE_SUPPORT_LED (defined at application/samples/peripheral/Kconfig:460) defined with multiple prompts in single location
+warning: SAMPLE_SUPPORT_LED (defined at application/samples/peripheral/Kconfig:460) defined with more than one help text -- only the last one will be used
+Not searching for unused variables given on the command line.
+-- BUILD_PLATFORM: windows
+GEN_TARGET_SRC = D:/VSCode/fbb_ws63/src/output/ws63/acore/acore.c
+PRECOMPILE_TARGET = D:/VSCode/fbb_ws63/src/output/ws63/acore/acore.etypes
+TARGET_INCLUDE = D:/VSCode/fbb_ws63/src/middleware/chips/ws63/nv/nv_config/include;D:/VSCode/fbb_ws63/src/middleware/utils/common_headers/native
+BGTP_PROJECT=ws63
+BGTP_ROM_VERSION=false
+BGTP_DEVICE_ONLY=false
+BG COMMON BTH_ROM_LIST:__null__
+BTH_ROM_LIST:__null__
+-- project_name:
+-- project_name:
+-- Configuring done
+-- Generating done
+-- Build files have been written to: D:/VSCode/fbb_ws63/src/output/ws63/acore/ws63-loaderboot
+[1/12] Building C object CMakeFiles/loaderboot.dir/temp/__null___.c.obj
+[2/12] Generating NV_SRC
+[3/12] Linking C executable loaderboot.elf
+Memory region         Used Size  Region Size  %age Used
+           STACK:          9 KB         9 KB    100.00%
+            SRAM:       18080 B       119 KB     14.84%
+LOADERBOOT_ROM_ADDR:       30860 B        40 KB     75.34%
+[4/12] post_build:gen bin file
+[5/12] cmd.exe /C "cd /D D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-loaderboot && D:\VSCode\fbb_ws63\src\tools\bin\compiler\riscv\cc_riscv32_musl_105\cc_riscv32_musl_win\bin\riscv32-linux-musl-nm.exe -S -n --format=sysv loaderboot.elf > loaderboot.nm"
+[6/12] cmd.exe /C "cd /D D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-loaderboot && D:\VSCode\fbb_ws63\src\tools\bin\compiler\riscv\cc_riscv32_musl_105\cc_riscv32_musl_win\bin\riscv32-linux-musl-objdump.exe -d -m riscv loaderboot.elf > loaderboot.asm"
+[7/12] cmd.exe /C "cd /D D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-loaderboot && D:\VSCode\fbb_ws63\src\tools\bin\compiler\riscv\cc_riscv32_musl_105\cc_riscv32_musl_win\bin\riscv32-linux-musl-objcopy.exe -O ihex loaderboot.elf loaderboot_std.hex"
+[8/12] cmd.exe /C "cd /D D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-loaderboot && D:\VSCode\fbb_ws63\src\tools\bin\compiler\riscv\cc_riscv32_musl_105\cc_riscv32_musl_win\bin\riscv32-linux-musl-objdump.exe -x -S -l loaderboot.elf > loaderboot.lst"
+[9/12] cmd.exe /C "cd /D D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-loaderboot && D:\VSCode\tools\python\python.exe D:/VSCode/fbb_ws63/src/build/script/utils/create_hex.py loaderboot.bin loaderboot.hex"
+[10/12] MEM_LIMIT
+[11/12] cmd.exe /C "cd /D D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-loaderboot && D:\VSCode\tools\python\python.exe D:/VSCode/fbb_ws63/src/build/script/utils/elftodu.py D:/VSCode/fbb_ws63/src loaderboot.elf D:/VSCode/fbb_ws63/src/tools/bin/compiler/riscv/cc_riscv32_musl_105/cc_riscv32_musl_win/bin/riscv32-linux-musl-nm.exe > loaderboot.du && D:\VSCode\tools\python\python.exe D:/VSCode/fbb_ws63/src/build/script/utils/mem_stats.py loaderboot.lst loaderboot.du D:/VSCode/fbb_ws63/src/output/ws63/acore/ws63-loaderboot/linker.lds ws63 > loaderboot.mem"
+[12/12] ws63 image sign
+generate params.bin...
+Build params success!
+params.bin size:  1024
+params.bin generate successfully!!!
+params_sign.bin generate successfully!!!
+generate fill root_pubk.bin
+merge out path:  D:\VSCode\fbb_ws63\src\build\config\target_config\ws63\sign_config
+root_params_sign.bin generate successfully!!!
+sign name:  D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-ssb/ssb.bin
+D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-ssb/ssb.bin size:  20928
+D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-ssb/ssb.bin  generated successfully!!!
+ssb_sign.bin generated successfully!!!
+D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-flashboot/flashboot.bin size:  49408
+flash_sign.bin generated successfully!!!
+D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-loaderboot\loaderboot.bin size:  30860
+loaderboot_sign.bin generated successfully!!!
+merge out path:  D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-loaderboot
+root_loaderboot_sign.bin generated successfully!!!
+sign name:  D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-liteos-app/ws63-liteos-app.bin
+D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-liteos-app/ws63-liteos-app.bin size:  1301120
+D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-liteos-app/ws63-liteos-app.bin  generated successfully!!!
+sign name:  D:\VSCode\fbb_ws63\src\output\ws63\acore\boot_bin\ws63-liteos-mfg.bin
+D:\VSCode\fbb_ws63\src\output\ws63\acore\boot_bin\ws63-liteos-mfg.bin size:  1263872
+D:\VSCode\fbb_ws63\src\output\ws63\acore\boot_bin\ws63-liteos-mfg.bin  generated successfully!!!
+[!][copy_files_to_interim] File `D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-ssb\ssb.bin` not found, will skip it !
+[!][copy_files_to_interim] File `D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-ssb\ssb_sign.bin` not found, will skip it !
+[!][copy_files_to_interim] File `D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-liteos-hilink\ws63-liteos-hilink.bin` not found, will skip it !
+[!][copy_files_to_interim] File `D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-liteos-hilink\ws63-liteos-hilink-sign.bin` not found, will skip it !
+current work direction:  D:\VSCode\fbb_ws63\src
+NV file reading:  D:\VSCode\fbb_ws63\src\output\ws63\acore\nv_bin\temp\cfg\acore_nv.json
+nv xml writing in:  D:\VSCode\fbb_ws63\src\output\ws63\database\cco\system\hdbcfg\mss_nvi_db.xml
+struct file reading:  D:\VSCode\fbb_ws63\src\output\ws63\acore\nv_bin\temp\acore.etypes
+struct writing in: D:\VSCode\fbb_ws63\src\output\ws63\database\cco\system\nv\nv_struct_def.txt
+python path:  D:\VSCode\tools\python\python.exe
+[ws63][acore] run custom cmd success!
+D:\VSCode\fbb_ws63\src\build\script\.\..\..\config.in
+D:\VSCode\fbb_ws63\src
+No change to Kconfig header in 'D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-loaderboot\mconfig.h'
+######### Build target:ws63_loaderboot success
+ws63-loaderboot takes 3.200905 s
+python path:  D:\VSCode\tools\python\python.exe
+copy_files_to_interim ing...
+['D:\\VSCode\\tools\\python\\python.exe', 'D:\\VSCode\\fbb_ws63\\src\\build\\config\\target_config\\ws63\\script\\copy_files_to_interim.py', 'D:\\VSCode\\fbb_ws63\\src', 'D:\\VSCode\\fbb_ws63\\src\\output']
+copy_files_to_interim done!
+['D:\\VSCode\\tools\\python\\python.exe', 'D:\\VSCode\\fbb_ws63\\src\\build\\config\\target_config\\ws63\\script\\nv_handle.py', 'D:\\VSCode\\fbb_ws63\\src\\output']
+[ws63][acore] run custom cmd success!
+warning: SAMPLE_SUPPORT_LED (defined at application/samples/peripheral/Kconfig:460) defined with multiple prompts in single location
+warning: SAMPLE_SUPPORT_LED (defined at application/samples/peripheral/Kconfig:460) defined with more than one help text -- only the last one will be used
+Not searching for unused variables given on the command line.
+-- BUILD_PLATFORM: windows
+LOSCFG_PLATFORM is set to ws63
+LOSCFG_COMPILER_GNU_BINUTILS is set to y
+LOSCFG_COMPILER_GCC is set to y
+LOSCFG_COMPILER_TOOLCHAIN_MUSL is set to y
+LOSCFG_COMPILER_RISCV_GCC_MUSL is set to y
+LOSCFG_COMPILER_RISCV_UNKNOWN is set to y
+LOSCFG_RISCV_COMPILER_OPTIONS_USER_DEFINED is set to 
+LOSCFG_RISCV_COMPILER_OPTIONS_LDM_STM is set to y
+LOSCFG_RISCV_COMPILER_OPTIONS_EMIT_LLI is set to y
+LOSCFG_COMPILER_OPTIMIZE_SIZE is set to y
+LOSCFG_FAMILY_AIOT is set to y
+LOSCFG_FAMILY is set to aiot
+LOSCFG_PLATFORM is set to ws63
+LOSCFG_PLATFORM_WS63 is set to y
+LOSCFG_USING_BOARD_LD is set to y
+LOSCFG_USING_BOARD_RESET_VECTOR is set to y
+LOSCFG_ARCH_FPU_ENABLE is set to y
+LOSCFG_APC_ENABLE is set to y
+LOSCFG_ARCH_PMU is set to y
+LOSCFG_ARCH_RISCV32 is set to y
+LOSCFG_ARCH_RISCV_RV32IMC is set to y
+LOSCFG_ARCH_RISCV_RV32F is set to y
+LOSCFG_ARCH_LINXCORE_131 is set to y
+LOSCFG_KERNEL_MIN is set to y
+LOSCFG_SCHED is set to y
+LOSCFG_SCHED_SQ is set to y
+LOSCFG_BASE_CORE_TIMESLICE is set to y
+LOSCFG_BASE_CORE_TIMESLICE_TIMEOUT is set to 2
+LOSCFG_BASE_CORE_TSK_MONITOR is set to y
+LOSCFG_TASK_STACK_DYNAMIC_ALLOCATION is set to y
+LOSCFG_BASE_CORE_TSK_LIMIT is set to 28
+LOSCFG_BASE_CORE_TSK_MIN_STACK_SIZE is set to 1024
+LOSCFG_BASE_CORE_TSK_DEFAULT_STACK_SIZE is set to 2048
+LOSCFG_BASE_CORE_TSK_SWTMR_STACK_SIZE is set to 2048
+LOSCFG_BASE_CORE_TSK_IDLE_STACK_SIZE is set to 1024
+LOSCFG_BASE_CORE_TSK_DEFAULT_PRIO is set to 10
+LOSCFG_BASE_CORE_TICK_PER_SECOND is set to 100
+LOSCFG_BASE_CORE_USE_SINGLE_LIST is set to y
+LOSCFG_STARTUP_STACK_SIZE is set to 0x4000
+LOSCFG_KERNEL_MEM_ALLOC is set to y
+LOSCFG_KERNEL_MEM_BESTFIT is set to y
+LOSCFG_KERNEL_MEM_SLAB_EXTENTION is set to y
+LOSCFG_MEM_TASK_STAT is set to y
+LOSCFG_ARCH_INTERRUPT_TAKEOVER is set to y
+LOSCFG_ARCH_INTERRUPT_PREEMPTION is set to y
+LOSCFG_HWI_PRE_POST_PROCESS is set to y
+LOSCFG_HWI_WITH_ARG is set to y
+LOSCFG_IRQ_STACK_SIZE is set to 0x2000
+LOSCFG_NMI_STACK_SIZE is set to 0x800
+LOSCFG_PLATFORM_HWI_LIMIT is set to 96
+LOSCFG_HWI_PRIO_LIMIT is set to 7
+LOSCFG_EXC_STACK_SIZE is set to 0x800
+LOSCFG_BASE_CORE_SWTMR is set to y
+LOSCFG_BASE_CORE_SWTMR_LIMIT is set to 16
+LOSCFG_BASE_IPC_QUEUE is set to y
+LOSCFG_QUEUE_DYNAMIC_ALLOCATION is set to y
+LOSCFG_BASE_IPC_QUEUE_LIMIT is set to 16
+LOSCFG_BASE_IPC_EVENT is set to y
+LOSCFG_BASE_IPC_MUX is set to y
+LOSCFG_MUTEX_WAITMODE_PRIO is set to y
+LOSCFG_BASE_IPC_MUX_LIMIT is set to 60
+LOSCFG_BASE_IPC_SEM is set to y
+LOSCFG_BASE_IPC_SEM_LIMIT is set to 32
+LOSCFG_KERNEL_PRINTF is set to y
+LOSCFG_KERNEL_PRINTF_SIZE_EXTEND is set to y
+LOSCFG_KERNEL_RINGBUF is set to y
+LOSCFG_BASE_CORE_SYS_RES_CHECK is set to y
+LOSCFG_LIB_LIBC is set to y
+LOSCFG_LIB_LIBM is set to y
+LOSCFG_LIB_FORMAT is set to y
+LOSCFG_COMPAT_CMSIS is set to y
+LOSCFG_COMPAT_CMSIS_VER_2 is set to y
+LOSCFG_COMPAT_LINUX is set to y
+LOSCFG_COMPAT_LINUX_PENDLIST is set to y
+LOSCFG_COMPAT_LINUX_TIMER is set to y
+LOSCFG_COMPAT_LINUX_COMPLETION is set to y
+LOSCFG_COMPAT_LINUX_WAITQUEUE is set to y
+LOSCFG_COMPAT_LINUX_DRIVER_BASE is set to y
+LOSCFG_NET_IPERF is set to y
+LOSCFG_BACKTRACE is set to y
+LOSCFG_DEBUG_RESOURCE_INFO is set to y
+LOSCFG_SERIAL_OUTPUT_ENABLE is set to y
+LOSCFG_KERNEL_CPUP is set to y
+LOSCFG_DRIVERS_BASE is set to y
+LOSCFG_RISCV_HIMIDEERV200_PLIC is set to y
+LOSCFG_TIMER_VENDOR is set to y
+LOSCFG_DRIVERS_UART_VENDOR is set to y
+LOSCFG_DRIVERS_SIMPLE_UART is set to y
+LOSCFG_CC_NO_STACKPROTECTOR is set to y
+LOSCFG_TASK_JOINABLE is set to y
+CMAKE_TOOLCHAIN_FILE is defined ahead, skip auto-config compiler
+CMAKE_TOOLCHAIN_FILE is defined ahead, skip auto-config compiler
+OUT:D:/VSCode/fbb_ws63/src/output/ws63/acore/ws63-liteos-app/kernel/liteos/liteos_v208.5.0
+LITEOS_MODULE_DEP_LIBS_PATH:D:/VSCode/fbb_ws63/src/output/ws63/acore/ws63-liteos-app/liteos/libs/libtargets.a;D:/VSCode/fbb_ws63/src/output/ws63/acore/ws63-liteos-app/liteos/libs/libbase.a;D:/VSCode/fbb_ws63/src/output/ws63/acore/ws63-liteos-app/liteos/libs/libcpup.a;D:/VSCode/fbb_ws63/src/output/ws63/acore/ws63-liteos-app/liteos/libs/libinit.a;D:/VSCode/fbb_ws63/src/output/ws63/acore/ws63-liteos-app/liteos/libs/libc.a;D:/VSCode/fbb_ws63/src/output/ws63/acore/ws63-liteos-app/liteos/libs/libm.a;D:/VSCode/fbb_ws63/src/output/ws63/acore/ws63-liteos-app/liteos/libs/libcsysdeps.a;D:/VSCode/fbb_ws63/src/output/ws63/acore/ws63-liteos-app/liteos/libs/libdriverbase.a;D:/VSCode/fbb_ws63/src/output/ws63/acore/ws63-liteos-app/liteos/libs/libcmsis.a;D:/VSCode/fbb_ws63/src/output/ws63/acore/ws63-liteos-app/liteos/libs/liblinux.a
+LITEOS_DEP_LIBS_INT:targets;base;cpup;init;c;m;csysdeps;driverbase;cmsis;linux
+LITEOS_DEP_LIBS_EXT:gcc;gcc_eh
+LITEOS_BASELIB:m;gcc;gcc_eh;targets;base;cpup;init;c;m;csysdeps;driverbase;cmsis;linux
+LOS_INTF_DEP_TARGETS:targets_intf_pub;base_intf_pub;cpup_intf_pub;init_intf_pub;c_intf_pub;m_intf_pub;csysdeps_intf_pub;driverbase_intf_pub;cmsis_intf_pub;linux_intf_pub
+-- COM_HEADER-includeD:/VSCode/fbb_ws63/src/output/ws63/acore/ws63-liteos-app/kernel/liteos/liteos_v208.5.0/menuconfig/include/menuconfig.h
+-- D:/VSCode/fbb_ws63/src/drivers/chips/ws63/porting/patch/sfc_patch.c is not found, finding libplat_patch.a in D:/VSCode/fbb_ws63/src/drivers/chips/ws63/porting/patch/ws63-liteos-app
+-- D:/VSCode/fbb_ws63/src/drivers/chips/ws63/rom_config/acore/output/rom_callback.S is not found, finding librom_callback.a in D:/VSCode/fbb_ws63/src/drivers/chips/ws63/ws63-liteos-app
+GEN_TARGET_SRC = D:/VSCode/fbb_ws63/src/output/ws63/acore/acore.c
+PRECOMPILE_TARGET = D:/VSCode/fbb_ws63/src/output/ws63/acore/acore.etypes
+TARGET_INCLUDE = D:/VSCode/fbb_ws63/src/middleware/chips/ws63/nv/nv_config/include;D:/VSCode/fbb_ws63/src/middleware/utils/common_headers/native
+-- D:/VSCode/fbb_ws63/src/middleware/utils/at/at_bt_cmd/src/at_bt_cmd_register.c is not found, finding libbt_at.a in D:/VSCode/fbb_ws63/src/middleware/utils/at/at_bt_cmd/ws63-liteos-app
+-- D:/VSCode/fbb_ws63/src/middleware/utils/at/at_radar_cmd/at/at_radar.c is not found, finding libradar_at.a in D:/VSCode/fbb_ws63/src/middleware/utils/at/at_radar_cmd/ws63-liteos-app
+Build wifi device with rom repo!
+-- D:/VSCode/fbb_ws63/src/protocol/wifi/rom_code/ws63/source/alg/iot_alg/device/alg_main.c is not found, finding libwifi_driver_dmac.a in D:/VSCode/fbb_ws63/src/protocol/wifi/ws63-liteos-app
+-- D:/VSCode/fbb_ws63/src/protocol/wifi/rom_code/ws63/source/common/romable/wifi_rom_data.c is not found, finding libwifi_rom_data.a in D:/VSCode/fbb_ws63/src/protocol/wifi/ws63-liteos-app
+-- D:/VSCode/fbb_ws63/src/protocol/wifi/source/host/feature/interface/hmac_feature_interface.c is not found, finding libwifi_driver_hmac.a in D:/VSCode/fbb_ws63/src/protocol/wifi/ws63-liteos-app
+-- D:/VSCode/fbb_ws63/src/protocol/wifi/source/host/forward/hmac_rx_data.c is not found, finding libwifi_driver_tcm.a in D:/VSCode/fbb_ws63/src/protocol/wifi/ws63-liteos-app
+-- D:/VSCode/fbb_ws63/src/protocol/wifi/source/alg/iot_alg/host/alg_txbf.c is not found, finding libwifi_alg_txbf.a in D:/VSCode/fbb_ws63/src/protocol/wifi/ws63-liteos-app
+-- D:/VSCode/fbb_ws63/src/protocol/wifi/source/alg/iot_alg/host/alg_temp_protect.c is not found, finding libwifi_alg_temp_protect.a in D:/VSCode/fbb_ws63/src/protocol/wifi/ws63-liteos-app
+-- D:/VSCode/fbb_ws63/src/protocol/wifi/source/alg/iot_alg/host/alg_anti_interference.c is not found, finding libwifi_alg_anti_interference.a in D:/VSCode/fbb_ws63/src/protocol/wifi/ws63-liteos-app
+-- D:/VSCode/fbb_ws63/src/protocol/wifi/source/alg/iot_alg/host/alg_edca_opt.c is not found, finding libwifi_alg_edca_opt.a in D:/VSCode/fbb_ws63/src/protocol/wifi/ws63-liteos-app
+-- D:/VSCode/fbb_ws63/src/protocol/wifi/source/alg/iot_alg/host/alg_cca_intrf_mode.c is not found, finding libwifi_alg_cca_opt.a in D:/VSCode/fbb_ws63/src/protocol/wifi/ws63-liteos-app
+BGTP_PROJECT=ws63
+BGTP_ROM_VERSION=true
+BGTP_DEVICE_ONLY=false
+-- D:/VSCode/fbb_ws63/src/protocol/bt/controller/bgtp/__null__ is not found, finding libbgtp.a in D:/VSCode/fbb_ws63/src/protocol/bt/controller/bgtp/ws63-liteos-app
+-- D:/VSCode/fbb_ws63/src/protocol/bt/controller/bgtp/__null__ is not found, finding libbgtp_rom_data.a in D:/VSCode/fbb_ws63/src/protocol/bt/controller/bgtp/ws63-liteos-app
+-- D:/VSCode/fbb_ws63/src/protocol/bt/host/bg_common/__null__ is not found, finding libbg_common.a in D:/VSCode/fbb_ws63/src/protocol/bt/host/bg_common/ws63-liteos-app
+BG COMMON BTH_ROM_LIST:__null__
+BTH_ROM_LIST:__null__
+-- D:/VSCode/fbb_ws63/src/protocol/bt/host/bt/__null__ is not found, finding libbt_app.a in D:/VSCode/fbb_ws63/src/protocol/bt/host/bt/ws63-liteos-app
+-- D:/VSCode/fbb_ws63/src/protocol/bt/host/bt/sdk/__null__ is not found, finding libbth_sdk.a in D:/VSCode/fbb_ws63/src/protocol/bt/host/bt/sdk/ws63-liteos-app
+-- D:/VSCode/fbb_ws63/src/protocol/bt/host/bt/__null__ is not found, finding libbt_host.a in D:/VSCode/fbb_ws63/src/protocol/bt/host/bt/ws63-liteos-app
+BTH_ROM_LIST:__null__
+BTH_PUBLIC_HEADER_LIST=
+-- D:/VSCode/fbb_ws63/src/protocol/bt/host/gle/__null__ is not found, finding libbth_gle.a in D:/VSCode/fbb_ws63/src/protocol/bt/host/gle/ws63-liteos-app
+-- D:/VSCode/fbb_ws63/src/protocol/radar/alg_ai/radar_ai_attention_layer.c is not found, finding libradar_ai.a in D:/VSCode/fbb_ws63/src/protocol/radar/alg_ai/ws63-liteos-app
+-- project_name:
+-- D:/VSCode/fbb_ws63/src/protocol/radar/plat/utils/radar_fft.c is not found, finding libradar_sensing.a in D:/VSCode/fbb_ws63/src/protocol/radar/plat/ws63-liteos-app
+-- project_name:
+-- Configuring done
+-- Generating done
+-- Build files have been written to: D:/VSCode/fbb_ws63/src/output/ws63/acore/ws63-liteos-app
+[1/18] Building C object CMakeFiles/ws63-liteos-app.dir/temp/__null___.c.obj
+[2/18] Generating NV_SRC
+[3/18] Building C object application/samples/CMakeFiles/samples.dir/peripheral/wifiap/softap_sample.c.obj
+[4/18] Linking C static library application\samples\libsamples.a
+[5/18] Linking C executable ws63-liteos-app.elf
+Memory region         Used Size  Region Size  %age Used
+             ROM:          0 GB       268 KB      0.00%
+            ITCM:       12992 B        16 KB     79.30%
+            DTCM:       14900 B        16 KB     90.94%
+            SRAM:      184336 B     548608 B     33.60%
+PRESERVE_SHARE_MEM:         252 B        256 B     98.44%
+ PROGRAM_STARTUP:         532 B         1 KB     51.95%
+         PROGRAM:     1301300 B    2357504 B     55.20%
+[6/18] post_build:gen rom and ram bin file
+[7/18] cmd.exe /C "cd /D D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-liteos-app && D:\VSCode\fbb_ws63\src\tools\bin\compiler\riscv\cc_riscv32_musl_105\cc_riscv32_musl_fp_win\bin\riscv32-linux-musl-nm.exe -S -n --format=sysv ws63-liteos-app.elf > ws63-liteos-app.nm"
+[8/18] cmd.exe /C "cd /D D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-liteos-app && D:\VSCode\fbb_ws63\src\tools\bin\compiler\riscv\cc_riscv32_musl_105\cc_riscv32_musl_fp_win\bin\riscv32-linux-musl-objcopy.exe -O ihex ws63-liteos-app.elf ws63-liteos-app_std.hex"
+[9/18] cmd.exe /C "cd /D D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-liteos-app && D:\VSCode\tools\python\python.exe D:/VSCode/fbb_ws63/src/build/script/utils/create_hex.py ws63-liteos-app_rom.bin ws63-liteos-app_rom.hex"
+[10/18] update nv bin
+build nv bin success!!
+[11/18] cmd.exe /C "cd /D D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-liteos-app && D:\VSCode\tools\python\python.exe D:/VSCode/fbb_ws63/src/build/script/utils/create_hex.py ws63-liteos-app.bin ws63-liteos-app.hex"
+[12/18] cmd.exe /C "cd /D D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-liteos-app && D:\VSCode\tools\python\python.exe D:/VSCode/fbb_ws63/src/build/script/patch/patch_riscv.py ws63-liteos-app.bin ws63-liteos-app_rom.bin ws63-liteos-app.nm D:/VSCode/fbb_ws63/src/build/config/target_config/ws63/patch_config acore ws63-liteos-app D:/VSCode/fbb_ws63/src/output/ws63/acore/ws63-liteos-app"
+Generating ws63-liteos-app.bin...
+[13/18] ws63 image sign
+generate params.bin...
+Build params success!
+params.bin size:  1024
+params.bin generate successfully!!!
+params_sign.bin generate successfully!!!
+generate fill root_pubk.bin
+merge out path:  D:\VSCode\fbb_ws63\src\build\config\target_config\ws63\sign_config
+root_params_sign.bin generate successfully!!!
+sign name:  D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-ssb/ssb.bin
+D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-ssb/ssb.bin size:  20928
+D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-ssb/ssb.bin  generated successfully!!!
+ssb_sign.bin generated successfully!!!
+D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-flashboot/flashboot.bin size:  49408
+flash_sign.bin generated successfully!!!
+D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-loaderboot\loaderboot.bin size:  30912
+loaderboot_sign.bin generated successfully!!!
+merge out path:  D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-loaderboot
+root_loaderboot_sign.bin generated successfully!!!
+sign name:  D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-liteos-app/ws63-liteos-app.bin
+D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-liteos-app/ws63-liteos-app.bin size:  1302324
+D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-liteos-app/ws63-liteos-app.bin  generated successfully!!!
+sign name:  D:\VSCode\fbb_ws63\src\output\ws63\acore\boot_bin\ws63-liteos-mfg.bin
+D:\VSCode\fbb_ws63\src\output\ws63\acore\boot_bin\ws63-liteos-mfg.bin size:  1263872
+D:\VSCode\fbb_ws63\src\output\ws63\acore\boot_bin\ws63-liteos-mfg.bin  generated successfully!!!
+[14/18] cmd.exe /C "cd /D D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-liteos-app && D:\VSCode\fbb_ws63\src\tools\bin\compiler\riscv\cc_riscv32_musl_105\cc_riscv32_musl_fp_win\bin\riscv32-linux-musl-objdump.exe -d -m riscv ws63-liteos-app.elf > ws63-liteos-app.asm"
+[15/18] cmd.exe /C "cd /D D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-liteos-app && D:\VSCode\tools\python\python.exe D:/VSCode/fbb_ws63/src/build/script/codesize_statistic.py ws63-liteos-app"
+codesize statistics done
+[16/18] cmd.exe /C "cd /D D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-liteos-app && D:\VSCode\fbb_ws63\src\tools\bin\compiler\riscv\cc_riscv32_musl_105\cc_riscv32_musl_fp_win\bin\riscv32-linux-musl-objdump.exe -x -S -l ws63-liteos-app.elf > ws63-liteos-app.lst"
+[17/18] MEM_LIMIT
+[18/18] cmd.exe /C "cd /D D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-liteos-app && D:\VSCode\tools\python\python.exe D:/VSCode/fbb_ws63/src/build/script/utils/elftodu.py D:/VSCode/fbb_ws63/src ws63-liteos-app.elf D:/VSCode/fbb_ws63/src/tools/bin/compiler/riscv/cc_riscv32_musl_105/cc_riscv32_musl_fp_win/bin/riscv32-linux-musl-nm.exe > ws63-liteos-app.du && D:\VSCode\tools\python\python.exe D:/VSCode/fbb_ws63/src/build/script/utils/mem_stats.py ws63-liteos-app.lst ws63-liteos-app.du D:/VSCode/fbb_ws63/src/output/ws63/acore/ws63-liteos-app/linker.lds ws63 > ws63-liteos-app.mem"
+[1/106] HSO_DB Makedir
+[2/106] cmd.exe /C "cd /D D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-liteos-app && D:\VSCode\tools\python\python.exe D:/VSCode/fbb_ws63/src/build/script/hdbxml/bt_status_to_hso_prim_xml.py D:/VSCode/fbb_ws63/src/ ws63 D:/VSCode/fbb_ws63/src/ && D:\VSCode\tools\python\python.exe D:/VSCode/fbb_ws63/src/build/script/hdbxml/ota_msg_to_hso_prim_xml.py D:/VSCode/fbb_ws63/src/ ws63 D:/VSCode/fbb_ws63/src/"
+[3/106] Building HSO_DB_reboot
+[4/106] Building HSO_DB_hal_pmp
+[5/106] Building HSO_DB_version_port
+[6/106] Building HSO_DB_non_os
+[7/106] Building HSO_DB_hal_reboot
+[8/106] Building HSO_DB_dfx_port_ws63
+[9/106] Building HSO_DB_wifi_uapsd_ap
+[10/106] Building HSO_DB_cpu_utils
+[11/106] Building HSO_DB_liteos_port
+[12/106] Building HSO_DB_dma_port
+[13/106] Building HSO_DB_tsensor_port
+[14/106] Building HSO_DB_hal_spi
+[15/106] Building HSO_DB_pmp_cfg_ws63
+[16/106] Building HSO_DB_ws63_liteos_app
+[17/106] Building HSO_DB_partition
+[18/106] Building HSO_DB_lpm
+[19/106] Building HSO_DB_chip_ws63
+[20/106] Building HSO_DB_mac_addr_ws63
+[21/106] Building HSO_DB_adc_port
+[22/106] Building HSO_DB_efuse
+[23/106] Building HSO_DB_osal_adapt
+[24/106] Building HSO_DB_hal_uart
+[25/106] Building HSO_DB_hal_efuse_v151
+[26/106] Building HSO_DB_osal
+[27/106] Building HSO_DB_efuse_port
+[28/106] Building HSO_DB_spi
+[29/106] Building HSO_DB_tsensor
+[30/106] Building HSO_DB_partition_ws63
+[31/106] Building HSO_DB_spi_porting
+[32/106] Building HSO_DB_hal_dma_v151
+[33/106] Building HSO_DB_pwm
+[34/106] Building HSO_DB_hal_tsensor
+[35/106] Building HSO_DB_hal_pwm
+[36/106] Building HSO_DB_hal_adc
+[37/106] Building HSO_DB_pwm_port
+[38/106] Building HSO_DB_app_init
+[39/106] Building HSO_DB_sfc_port_ws63
+[40/106] Building HSO_DB_adc
+[41/106] Building HSO_DB_sfc_flash_config_ws63
+[42/106] Building HSO_DB_dma
+[43/106] Building HSO_DB_pmp
+[44/106] Building HSO_DB_pmp_port
+[45/106] Building HSO_DB_dyn_mem
+[46/106] Building HSO_DB_reboot_port
+[47/106] Building HSO_DB_hal_cpu_core
+[48/106] Building HSO_DB_gpio
+[49/106] Building HSO_DB_gpio_port
+[50/106] Building HSO_DB_hal_gpio_v150
+[51/106] Building HSO_DB_algorithm
+[52/106] Building HSO_DB_wifi_service
+[53/106] Building HSO_DB_at
+[54/106] Building HSO_DB_mbedtls_harden
+[55/106] Building HSO_DB_wifi_at
+[56/106] Building HSO_DB_lwip_tcm
+[57/106] Building HSO_DB_lwip
+[58/106] Building HSO_DB_wifi_frag
+[59/106] Building HSO_DB_wifi_csa
+[60/106] Building HSO_DB_wifi_tx_amsdu
+[61/106] Building HSO_DB_wifi_auto_adjust_freq
+[62/106] Building HSO_DB_wifi_radar_sensor
+[63/106] Building HSO_DB_sio_port
+[64/106] Building HSO_DB_i2s
+[65/106] Building HSO_DB_hal_sio
+[66/106] Building HSO_DB_nv_ws63
+[67/106] Building HSO_DB_nv
+[68/106] Building HSO_DB_wifi_btcoex
+[69/106] Building HSO_DB_nv_zdiag_ws63
+[70/106] Building HSO_DB_plt_at
+[71/106] Building HSO_DB_dfx_printer
+[72/106] Building HSO_DB_wpa_supplicant
+[73/106] Building HSO_DB_update_common
+[74/106] Building HSO_DB_update_common_ws63
+[75/106] Building HSO_DB_mbedtls_v3.6.0
+[76/106] Building HSO_DB_update_ab_ws63
+[77/106] Building HSO_DB_factory_ws63
+[78/106] Building HSO_DB_update_storage
+[79/106] Building HSO_DB_update_storage_ws63
+[80/106] Building HSO_DB_pm_port_ws63
+[81/106] Building HSO_DB_samples
+[82/106] Building HSO_DB_mips
+[83/106] Building HSO_DB_soc_port
+[84/106] Building HSO_DB_hal_mips
+[85/106] Building HSO_DB_cjson
+[86/106] Building HSO_DB_xo_trim_port
+[87/106] Building HSO_DB_i2c
+[88/106] Building HSO_DB_hal_i2c
+[89/106] Building HSO_DB_uart_port
+[90/106] Building HSO_DB_tiot_driver
+[91/106] Building HSO_DB_coap
+[92/106] Building HSO_DB_i2c_porting
+[93/106] Building HSO_DB_uart
+[94/106] Building HSO_DB_mqtt
+[95/106] Building HSO_DB_dfx_log_reader
+[96/106] Building HSO_DB_hal_security_unified
+[97/106] Building HSO_DB_diag_dfx_cmd
+[98/106] Building HSO_DB_dfx_diag
+[99/106] Building HSO_DB_dfx_log
+[100/106] Building HSO_DB_drv_security_unified
+[101/106] Building HSO_DB_dfx_panic
+[102/106] Building HSO_DB_dfx_preserve
+[103/106] Building HSO_DB_dfx_exception
+[104/106] Building HSO_DB_log_file
+[105/106] Building HSO_DB_soc_log
+[106/106] Running utility command for HSO_DB
+data size:  16
+finally size:  64
+[!][copy_files_to_interim] File `D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-ssb\ssb.bin` not found, will skip it !
+[!][copy_files_to_interim] File `D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-ssb\ssb_sign.bin` not found, will skip it !
+[!][copy_files_to_interim] File `D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-liteos-hilink\ws63-liteos-hilink.bin` not found, will skip it !
+[!][copy_files_to_interim] File `D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-liteos-hilink\ws63-liteos-hilink-sign.bin` not found, will skip it !
+[*] romboot not found, codepoint files will not be one!
+current work direction:  D:\VSCode\fbb_ws63\src
+NV file reading:  D:\VSCode\fbb_ws63\src\output\ws63\acore\nv_bin\temp\cfg\acore_nv.json
+nv xml writing in:  D:\VSCode\fbb_ws63\src\output\ws63\database\cco\system\hdbcfg\mss_nvi_db.xml
+struct file reading:  D:\VSCode\fbb_ws63\src\output\ws63\acore\nv_bin\temp\acore.etypes
+struct writing in: D:\VSCode\fbb_ws63\src\output\ws63\database\cco\system\nv\nv_struct_def.txt
+packet app
+['D:\\VSCode\\fbb_ws63\\src\\output\\ws63\\acore\\boot_bin\\root_loaderboot_sign.bin', 'D:\\VSCode\\fbb_ws63\\src\\output\\ws63\\acore\\param_bin\\root_params_sign.bin', 'D:\\VSCode\\fbb_ws63\\src\\output\\ws63\\acore\\boot_bin\\ssb_sign.bin', 'D:\\VSCode\\fbb_ws63\\src\\output\\ws63\\acore\\boot_bin\\flashboot_sign.bin', 'D:\\VSCode\\fbb_ws63\\src\\output\\ws63\\acore\\boot_bin\\flashboot_backup_sign.bin', 'D:\\VSCode\\fbb_ws63\\src\\output\\ws63\\acore\\nv_bin\\ws63_all_nv.bin', 'D:\\VSCode\\fbb_ws63\\src\\output\\ws63\\acore\\ws63-liteos-app\\ws63-liteos-app-sign.bin']
+[0, 2097152, 2105344, 2228224, 2162688, 6275072, 2293760]
+[2097152, 1920, 21696, 50176, 50176, 16384, 1303104]
+[31808, 1920, 21696, 50176, 50176, 8192, 1303104]
+[0, 1, 1, 1, 1, 1, 1]
+['D:\\VSCode\\fbb_ws63\\src\\output\\ws63\\acore\\boot_bin\\root_loaderboot_sign.bin', 'D:\\VSCode\\fbb_ws63\\src\\output\\ws63\\acore\\ws63-liteos-app\\ws63-liteos-app-sign.bin']
+[0, 2293760]
+[2097152, 1303104]
+[31808, 1303104]
+[0, 1]
+python path:  D:\VSCode\tools\python\python.exe
+flashboot start build .....
+['D:\\VSCode\\tools\\python\\python.exe', 'build.py', 'ws63-flashboot']
+loaderboot start build .....
+['D:\\VSCode\\tools\\python\\python.exe', 'build.py', 'ws63-loaderboot']
+[ws63][acore] run custom cmd success!
+D:\VSCode\fbb_ws63\src\build\script\.\..\..\config.in
+D:\VSCode\fbb_ws63\src
+No change to Kconfig header in 'D:\VSCode\fbb_ws63\src\output\ws63\acore\ws63-liteos-app\mconfig.h'
+######### Build target:ws63_liteos_app success
+ws63-liteos-app takes 33.244095 s
+python path:  D:\VSCode\tools\python\python.exe
+generate_efuse_bin ing...
+['D:\\VSCode\\tools\\python\\python.exe', 'D:\\VSCode\\fbb_ws63\\src\\build\\config\\target_config\\ws63\\script\\efuse_cfg_gen.py', 'ws63-liteos-app', 'D:\\VSCode\\fbb_ws63\\src\\output']
+generate_efuse_bin done!
+copy_files_to_interim ing...
+['D:\\VSCode\\tools\\python\\python.exe', 'D:\\VSCode\\fbb_ws63\\src\\build\\config\\target_config\\ws63\\script\\copy_files_to_interim.py', 'D:\\VSCode\\fbb_ws63\\src', 'D:\\VSCode\\fbb_ws63\\src\\output']
+copy_files_to_interim done!
+generate rom_in_one ing...
+['D:\\VSCode\\tools\\python\\python.exe', 'D:\\VSCode\\fbb_ws63\\src\\build\\config\\target_config\\ws63\\script\\rom_in_one.py', 'D:\\VSCode\\fbb_ws63\\src', 'ws63-liteos-app']
+generate rom_in_one done!
+['D:\\VSCode\\tools\\python\\python.exe', 'D:\\VSCode\\fbb_ws63\\src\\build\\config\\target_config\\ws63\\script\\nv_handle.py', 'D:\\VSCode\\fbb_ws63\\src\\output']
+[ws63][acore] run custom cmd success!
+packet ing...
+['D:\\VSCode\\tools\\python\\python.exe', 'D:\\VSCode\\fbb_ws63\\src\\tools\\pkg\\packet.py', 'ws63', 'ws63-liteos-app', '']
+packet success!
