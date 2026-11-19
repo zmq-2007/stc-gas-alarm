@@ -1,0 +1,44 @@
+wifiap 实训 · 预期串口日志（COMx / 115200 / 8N1）
+说明：以下为改造后 softap_sample.c 中 PRINT 语句的真实输出格式，MAC / IP / RSSI 会随实际手机变化。
+本文件是「预期/核对用」样本，不是真实采集数据。真实采集请运行：
+    python wifiap_serial_monitor.py --port COM7 --baud 115200
+程序会实时显示并另存 wifiap_serial_YYYYMMDD_HHMMSS.log。
+
+--------------------------------------------------------------------
+[WIFIAP] ==== WiFi AP (SoftAP) Sample Start ====
+[WIFIAP] WiFi init OK.
+[WIFIAP] Register event callback OK (sta_join / sta_leave).
+[WIFIAP] SSID    : H
+[WIFIAP] PASSWORD: 12345678
+[WIFIAP] SECURITY: WPA/WPA2-PSK MIX, CHANNEL: 6
+[WIFIAP] SoftAP try enable ...
+[WIFIAP] SoftAP enabled OK.
+[WIFIAP] netif ap0 IP=192.168.63.1 MASK=255.255.255.0 GW=192.168.63.2
+[WIFIAP] DHCP server started OK (pool 192.168.63.x)
+[WIFIAP] SoftAp start success.
+[WIFIAP] >>> 请用手机 WLAN 搜索热点 "H"，输入密码 12345678 连接 <<<
+[WIFIAP] Waiting for phone ... (poll 2000 ms)
+[WIFIAP] Connected stations: 0
+
+---- 手机 WLAN 选中 H 并输入密码 12345678 之后 ----
+[WIFIAP] Connected stations: 1
+[WIFIAP] [EVENT] STA JOIN  MAC=A8:6D:AA:3F:21:70  RSSI=-46 dBm  RATE=65000 kbps
+[WIFIAP] ****** 手机连接热点成功 / PHONE CONNECTED HOTSPOT SUCCESS ******
+[WIFIAP] SSID=H  PASSWORD=12345678  AP_IP=192.168.63.1
+[WIFIAP] [DHCP] phone MAC=A8:6D:AA:3F:21:70  IP=192.168.63.3
+[WIFIAP] LINK UP: phone -> AP(H)  AP=192.168.63.1  phone=192.168.63.3
+
+---- 手机关闭 WLAN / 离开热点之后 ----
+[WIFIAP] [EVENT] STA LEAVE MAC=A8:6D:AA:3F:21:70
+[WIFIAP] 手机已断开 / PHONE DISCONNECTED
+[WIFIAP] Connected stations: 0
+--------------------------------------------------------------------
+
+验收要点：
+1. 手机 WLAN 列表中出现热点 H（WPA2，2.4 GHz 6 信道）。
+2. 输入密码 12345678 后状态变为「已连接」，手机获得 192.168.63.x 地址。
+3. 串口出现「手机连接热点成功 / PHONE CONNECTED HOTSPOT SUCCESS」。
+4. 串口出现 [DHCP] phone IP=... 与 LINK UP，说明 DHCP 与链路均正常。
+
+烧录提示：HiSpark Studio 出现 "Connecting, please reset device..." 时，
+必须人工按一下开发板右侧 RESET 键才能继续，这一步无法由脚本代按。

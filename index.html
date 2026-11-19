@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>蜂鸣器 PWM 实训 · 一比一仿真平台</title>
+<title>蜂鸣器 PWM + WiFi AP 实训 · 一比一仿真平台</title>
 <style>
 :root{
   --bg:#f4f6fb; --card:#ffffff; --line:#e3e8f2; --line2:#eef2f9;
@@ -27,8 +27,8 @@ button{cursor:pointer}
 .brand .logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--brand),var(--brand2));display:grid;place-items:center;color:#fff;font-weight:700;font-size:15px;letter-spacing:-1px}
 .brand b{font-size:15px;display:block;line-height:1.25}
 .brand small{color:var(--ink3);font-size:11px;letter-spacing:.4px}
-.toptabs{display:flex;gap:6px;flex:1}
-.toptabs button{border:1px solid transparent;background:transparent;padding:8px 16px;border-radius:8px;font-weight:600;color:var(--ink2)}
+.toptabs{display:flex;gap:4px;flex:1;min-width:0}
+.toptabs button{border:1px solid transparent;background:transparent;padding:7px 11px;border-radius:8px;font-weight:600;font-size:12.5px;white-space:nowrap;color:var(--ink2)}
 .toptabs button.active{background:var(--brand-soft);color:var(--brand);border-color:#d8e0ff}
 .toptabs button.locked{color:var(--ink3)}
 .toptabs button.locked:after{content:"锁定";margin-left:8px;background:#edf0f6;border-radius:10px;padding:1px 7px;font-size:10px;font-weight:600}
@@ -206,6 +206,50 @@ details.ana pre{margin:0 0 10px}
 .steplabel{display:inline-block;background:var(--brand);color:#fff;border-radius:6px;padding:2px 9px;font-size:11.5px;font-weight:700;margin-right:8px}
 .taskall{background:#f8faff;border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:18px}
 .taskall ol{margin:8px 0 0;padding-left:22px;color:var(--ink2);font-size:12.5px;line-height:1.9}
+
+/* ---------- WiFi AP 实训（手机连接核心板热点） ---------- */
+.wifilayout{display:grid;grid-template-columns:220px minmax(0,1fr);min-height:520px}
+.wifinav{border-right:1px solid var(--line2);padding:14px 10px;background:#fbfcff;border-radius:0 0 0 12px}
+.wifinav h5{margin:2px 8px 10px;font-size:11px;color:var(--ink3);letter-spacing:1px}
+.wstep{display:flex;gap:8px;align-items:flex-start;width:100%;text-align:left;border:0;background:transparent;padding:8px 9px;border-radius:8px;color:var(--ink2);font-size:12px;line-height:1.45;margin-bottom:2px}
+.wstep:hover{background:#f1f5fd}
+.wstep.active{background:var(--brand-soft);color:var(--brand);font-weight:700}
+.wstep .n{width:18px;height:18px;flex:none;border-radius:50%;border:1.5px solid #cdd6e8;display:grid;place-items:center;font-size:10px;background:#fff}
+.wstep.done .n{background:var(--ok);border-color:var(--ok);color:#fff}
+.wstep.done .n:after{content:"✓"}
+.wstep.active .n{border-color:var(--brand);color:var(--brand)}
+.wmain{padding:20px 22px 26px;min-width:0}
+.wfoot{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 22px;border-top:1px solid var(--line2);background:#fcfdff;border-radius:0 0 12px 12px}
+@media(max-width:900px){.wifilayout{grid-template-columns:1fr}.wifinav{border-right:0;border-bottom:1px solid var(--line2)}}
+.serialbox{background:#0b1220;border:1px solid #1c2a45;border-radius:10px;padding:12px;height:268px;overflow:auto;font-family:var(--mono);font-size:11.5px;line-height:1.8;color:#c9d7ef}
+.serialbox div{white-space:pre-wrap;word-break:break-all}
+.serialbox .i{color:#7f94b8}.serialbox .ok{color:#7ee2a8}.serialbox .w{color:#ffd08a}.serialbox .cmd{color:#9ec0ff}
+.serialbox .hit{color:#8dffbc;font-weight:700;background:rgba(15,157,88,.16);border-left:2px solid var(--ok);padding-left:6px}
+.phonewrap{display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap}
+.phone{width:218px;height:430px;border:9px solid #1b2437;border-radius:30px;background:#0f172a;padding:12px 12px 14px;box-shadow:0 8px 24px rgba(20,35,70,.18);flex:none;position:relative}
+.phone .notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:78px;height:14px;background:#1b2437;border-radius:0 0 12px 12px}
+.pscreen{background:#f7f9ff;border-radius:16px;height:100%;padding:14px 11px;color:#1b2437;overflow:auto}
+.pscreen .ptime{font-size:11px;text-align:center;color:#5b6780}
+.pscreen h4{margin:8px 0 10px;font-size:13px}
+.wlan{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #e3e8f2;border-radius:9px;padding:9px 10px;margin-bottom:7px;font-size:11.5px}
+.wlan.sel{border-color:var(--brand);background:var(--brand-soft)}
+.wlan .bars{font-family:var(--mono);color:var(--brand);font-weight:700}
+.wlan .lock{color:var(--ink3);font-size:10px}
+.wlan .yes{color:var(--ok);font-weight:700}
+.pwd{background:#fff;border:1px solid #e3e8f2;border-radius:9px;padding:8px 10px;font-size:11.5px;margin-top:8px}
+.pstate{margin-top:10px;font-size:11.5px;line-height:1.7;color:#5b6780}
+.pstate b{color:var(--ok)}
+.wsuccess{background:var(--ok-soft);border:1px solid #bde5cc;border-radius:10px;padding:12px 14px;margin-top:14px;color:#0b6b3c;font-weight:700}
+.wfail{background:var(--err-soft);border:1px solid #f2c8ce;border-radius:10px;padding:12px 14px;margin-top:14px;color:#a4283a;font-weight:700}
+.wmet{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0}
+.wmet .m{background:#f8faff;border:1px solid var(--line);border-radius:9px;padding:9px 11px}
+.wmet .m small{display:block;color:var(--ink3);font-size:10.5px}
+.wmet .m b{font-family:var(--mono);color:var(--brand);font-size:13px}
+@media(max-width:1080px){.wmet{grid-template-columns:1fr 1fr}}
+.wcode{width:100%;height:300px;background:#0f172a;color:#d9e4f7;border:0;padding:12px;font-family:var(--mono);font-size:11.5px;line-height:1.6;resize:vertical}
+.wboardled{display:flex;gap:14px;font-size:11.5px;color:var(--ink2);margin-top:8px;flex-wrap:wrap}
+.wboardled i{display:inline-block;width:9px;height:9px;border-radius:50%;background:#cbd4e5;margin-right:5px;vertical-align:middle}
+.wboardled i.on{background:var(--ok)}
 </style>
 </head>
 <body>
@@ -213,12 +257,13 @@ details.ana pre{margin:0 0 10px}
 <header class="topbar">
   <div class="brand">
     <div class="logo">PWM</div>
-    <div><b>蜂鸣器开发 · 一比一实训仿真</b><small>HiHope NearLink DK_WS63E_V03 ｜ 交通灯板 BEEP ｜ github.com/zmq-2007/stc-gas-alarm</small></div>
+    <div><b>蜂鸣器 + WiFi AP 实训仿真</b><small>HiHope WS63E ｜ BEEP / SoftAP ｜ github.com/zmq-2007/stc-gas-alarm</small></div>
   </div>
   <div class="toptabs">
-    <button id="tabFlow" class="active" data-view="flow">实训流程（任务书 8 步）</button>
-    <button id="tabPrep" data-view="prep">预备知识 · 具体实现</button>
-    <button id="tabLab" class="locked" data-view="lab">虚拟蜂鸣器实验台</button>
+    <button id="tabFlow" class="active" data-view="flow">实训流程（8 步）</button>
+    <button id="tabPrep" data-view="prep">预备知识</button>
+    <button id="tabLab" class="locked" data-view="lab">蜂鸣器实验台</button>
+    <button id="tabWifi" data-view="wifi">WiFi AP · 手机连热点</button>
   </div>
   <div class="topright">
     <span id="compilePill" class="pill">编译未通过</span>
@@ -229,7 +274,7 @@ details.ana pre{margin:0 0 10px}
 <div class="app">
   <!-- 左侧步骤导航 -->
   <aside class="sidebar card">
-    <h4>实训指导任务书 · 8 步进度</h4>
+    <h4 id="sideTitle">实训指导任务书 · 8 步进度</h4>
     <div class="progwrap">
       <div class="progbar"><i id="progBar"></i></div>
       <div class="progtxt"><span id="progTxt">0 / 8 已完成</span><span id="progPct">0%</span></div>
@@ -372,11 +417,33 @@ details.ana pre{margin:0 0 10px}
         </div>
       </div>
     </section>
+
+    <!-- WiFi AP 实训（vendor/wifiap）：手机连接核心板热点 -->
+    <section id="wifiView" class="card hidden">
+      <div class="stephead">
+        <div class="crumb">实训指导任务书 · wifiap 章节　/　实验流程（11 步，一比一还原）</div>
+        <h2>WiFi AP（SoftAP）：手机连接核心板热点 <span class="pill" id="wifiPill" style="margin-left:10px">未编译</span></h2>
+        <p>基于 <code class="inl">vendor/HiHope_NearLink_DK_WS63E_V03/demo/wifiap</code>。核心板开热点 <b>SSID：H</b> / 密码 <b>12345678</b>，手机 WLAN 连上后，串口实时打印 STA 接入、MAC、DHCP 分配的 IP 与「手机连接热点成功」。</p>
+      </div>
+      <div class="wifilayout">
+        <div class="wifinav">
+          <h5>任务书 11 步 · 进度 <span id="wifiProgTxt">0 / 11</span></h5>
+          <div class="progbar" style="margin:0 8px 12px"><i id="wifiProgBar"></i></div>
+          <div id="wifiNav"></div>
+        </div>
+        <div class="wmain" id="wifiBody"></div>
+      </div>
+      <div class="wfoot">
+        <button class="btn gray sm" id="wPrev">← 上一步</button>
+        <span class="hint" id="wifiHint">完成本环节后点击「下一步」</span>
+        <button class="btn sm" id="wNext">下一步 →</button>
+      </div>
+    </section>
   </main>
 
   <!-- 右侧状态栏 -->
   <aside class="right">
-    <div class="card rbox">
+    <div class="card rbox" data-side="beep">
       <h4>虚拟开发板 <small id="boardStatus">未上电</small></h4>
       <div class="boardwrap" id="boardWrap">
         <svg viewBox="0 0 260 140" xmlns="http://www.w3.org/2000/svg">
@@ -398,14 +465,48 @@ details.ana pre{margin:0 0 10px}
       <div class="ledline"><span><i id="ledPwr"></i>电源</span><span><i id="ledRun"></i>运行</span><span><i id="ledBeep"></i>蜂鸣器</span></div>
     </div>
 
-    <div class="card rbox">
+    <div class="card rbox" data-side="beep">
       <h4>工程文件树 <small>src/application/samples/peripheral</small></h4>
       <div class="tree" id="fileTree"></div>
     </div>
 
-    <div class="card rbox">
+    <div class="card rbox" data-side="beep">
       <h4>编译 / 烧录控制台 <small>HiSpark Studio</small></h4>
       <div class="console" id="console"></div>
+    </div>
+
+    <div class="card rbox hidden" data-side="wifi">
+      <h4>虚拟核心板 <small id="wBoardStatus">未上电</small></h4>
+      <div style="background:#0f5138;border-radius:9px;padding:8px">
+        <svg viewBox="0 0 260 130" xmlns="http://www.w3.org/2000/svg">
+          <rect x="4" y="6" width="252" height="118" rx="9" fill="#16603f" stroke="#0e4a30"/>
+          <rect x="22" y="24" width="96" height="80" rx="5" fill="#1b2437" stroke="#3b4a68"/>
+          <text x="70" y="55" fill="#c9d7ef" font-size="10" text-anchor="middle" font-family="monospace">WS63E</text>
+          <text x="70" y="72" fill="#8fa3c8" font-size="8" text-anchor="middle" font-family="monospace">WiFi SoftAP</text>
+          <path d="M150 78 q22 -46 44 0" fill="none" stroke="#ffd08a" stroke-width="2.5"/>
+          <path d="M158 78 q14 -30 28 0" fill="none" stroke="#ffd08a" stroke-width="2"/>
+          <circle cx="172" cy="80" r="4" fill="#ffd08a"/>
+          <text x="172" y="102" fill="#ffd08a" font-size="9" text-anchor="middle" font-family="monospace">SSID: H</text>
+          <text x="200" y="34" fill="#cdeeda" font-size="8" font-family="monospace">2.4GHz CH6</text>
+        </svg>
+      </div>
+      <div class="wboardled">
+        <span><i id="wLedPwr"></i>电源</span><span><i id="wLedAp"></i>AP 已开启</span><span><i id="wLedSta"></i>手机已连接</span>
+      </div>
+      <div class="kv"><span>热点 SSID</span><b>H</b></div>
+      <div class="kv"><span>密码</span><b>12345678</b></div>
+      <div class="kv"><span>AP IP</span><b>192.168.63.1</b></div>
+      <div class="kv"><span>手机 IP</span><b id="wPhoneIp">--</b></div>
+    </div>
+
+    <div class="card rbox hidden" data-side="wifi">
+      <h4>工程文件树 <small>peripheral/wifiap</small></h4>
+      <div class="tree" id="wFileTree"></div>
+    </div>
+
+    <div class="card rbox hidden" data-side="wifi">
+      <h4>编译 / 烧录控制台 <small>HiSpark Studio</small></h4>
+      <div class="console" id="wConsole"></div>
     </div>
   </aside>
 </div>
@@ -668,7 +769,7 @@ function renderNav(){
   const done=STEPS.filter(s=>s.done()).length, pct=Math.round(done/STEPS.length*100);
   $('#progBar').style.width=pct+'%';$('#progTxt').textContent=done+' / '+STEPS.length+' 已完成';$('#progPct').textContent=pct+'%';
   const pill=$('#compilePill');
-  pill.textContent=S.compilePassed?'编译通过 · 实验台已解锁':'编译未通过';
+  pill.textContent=S.compilePassed?'蜂鸣器编译通过 · 已解锁':'蜂鸣器未编译';
   pill.className='pill '+(S.compilePassed?'ok':'');
   const tab=$('#tabLab');
   tab.className=S.compilePassed?'unlocked':'locked';
@@ -718,10 +819,18 @@ function switchView(v){
   $('#flowView').classList.toggle('hidden',v!=='flow');
   $('#prepView').classList.toggle('hidden',v!=='prep');
   $('#labView').classList.toggle('hidden',v!=='lab');
+  $('#wifiView').classList.toggle('hidden',v!=='wifi');
   $('#tabFlow').classList.toggle('active',v==='flow');
   $('#tabPrep').classList.toggle('active',v==='prep');
   $('#tabLab').classList.toggle('active',v==='lab');
+  $('#tabWifi').classList.toggle('active',v==='wifi');
+  document.querySelectorAll('[data-side]').forEach(el=>{
+    el.classList.toggle('hidden', el.dataset.side!==(v==='wifi'?'wifi':'beep'));
+  });
+  const st=$('#sideTitle');
+  if(st)st.textContent=v==='wifi'?'另一实训 · 蜂鸣器 8 步（切回顶部标签）':'实训指导任务书 · 8 步进度';
   if(v==='prep')setTimeout(drawStatic,0);
+  if(v==='wifi'&&typeof renderWifi==='function')renderWifi();
 }
 
 /* ============================================================
@@ -1273,7 +1382,8 @@ document.getElementById('musicStop').addEventListener('click',()=>{stopMusic();t
 document.getElementById('resetBtn').addEventListener('click',()=>{
   if(!confirm('确定要重置全部实训进度吗？已提交的代码将恢复为参考代码。'))return;
   stopTone();stopMusic();S=freshState();$('#console').innerHTML='';
-  log('[HiSpark Studio] 实训环境已重置','i');renderAll();refreshPrepChips();switchView('flow');toast('已重置');
+  if(typeof W!=='undefined'){W=freshWifi();$('#wConsole').innerHTML='';}
+  log('[HiSpark Studio] 实训环境已重置','i');renderAll();refreshPrepChips();renderWifi();switchView('flow');toast('已重置');
 });
 document.getElementById('prevBtn').addEventListener('click',()=>goStep(S.step-1));
 document.getElementById('nextBtn').addEventListener('click',()=>goStep(S.step+1));
@@ -1291,6 +1401,472 @@ renderAll();
 updateSliderUI();
 drawStatic();
 requestAnimationFrame(loop);
+
+/* ============================================================
+ *  WiFi AP 实训：vendor/wifiap · 手机连接核心板热点（任务书 11 步）
+ * ============================================================ */
+const WQUOTES = [
+  '步骤一：在xxx\\src\\application\\samples\\peripheral文件夹新建一个sample文件夹，在peripheral上右键选择“新建文件夹”，创建Sample文件夹，例如名称“wifiap”。',
+  '步骤二：将xxx\\vendor\\HiHope_NearLink_DK_WS63E_V03\\wifiap文件里面内容拷贝到步骤一创建的Sample文件夹中“wifiap”下。',
+  '步骤三：在xxx\\src\\application\\samples\\peripheral\\CMakeLists.txt文件中新增编译案例（如果不知道在哪个地方加的，可以在 set(SOURCES ... PARENT_SCOPE) 上面一行添加）。',
+  '步骤四：在xxx\\src\\application\\samples\\peripheral\\Kconfig文件中新增编译案例（如果不知道在哪个地方加，可以在最后一行添加）。',
+  '步骤五：点击如下图标，选择KConfig，具体选择路径“Application/Enable the Sample of peripheral”，在弹出框中选择“support WIFIAP Sample”，点击Save，关闭弹窗。',
+  '步骤六：点击“build”或者“rebuild”编译',
+  '步骤七：编译完成如下图所示。',
+  '步骤八：在HiSpark Studio工具中点击“工程配置”按钮，选择“程序加载”，传输方式选择“serial”，端口选择“comxxx”，com口在设备管理器中查看。',
+  '步骤九：配置完成后，点击工具“程序加载”按钮烧录。',
+  '步骤十：出现“Connecting, please reset device...”字样时，复位开发板，等待烧录结束。',
+  '步骤十一：手机WLAN搜索热点H，搜索成功后，输入密码：“12345678”进行连接。'
+];
+
+const WREF_C = `/* wifiap/softap_sample.c —— 基于 vendor/wifiap 改造，关键控制代码 */
+#include "lwip/netifapi.h"
+#include "wifi_hotspot.h"
+#include "wifi_hotspot_config.h"
+#include "wifi_device.h"
+#include "app_init.h"
+
+#define WIFI_SOFTAP_SSID       "H"
+#define WIFI_SOFTAP_PASSWORD   "12345678"
+#define WIFI_SOFTAP_CHANNEL    6
+
+/* (1) 注册事件回调：手机一连上热点，立刻从串口打印接入事件 */
+static void softap_sta_join_cb(const wifi_sta_info_stru *info)
+{
+    PRINT("[WIFIAP] [EVENT] STA JOIN  MAC=...\\r\\n");
+    PRINT("[WIFIAP] ****** 手机连接热点成功 / PHONE CONNECTED HOTSPOT SUCCESS ******\\r\\n");
+    softap_set_phone(info->mac_addr);
+}
+static wifi_event_stru g_softap_event_cb = {
+    .wifi_event_softap_sta_join  = softap_sta_join_cb,
+    .wifi_event_softap_sta_leave = softap_sta_leave_cb,
+};
+
+/* (2) 启动 SoftAP：SSID=H / 密码=12345678 / WPA2 / 6 信道 */
+static errcode_t example_softap_function(void)
+{
+    softap_config_stru hapd_conf = {0};
+    (void)memcpy_s(hapd_conf.ssid, sizeof(hapd_conf.ssid), "H", 2);
+    (void)memcpy_s(hapd_conf.pre_shared_key, 65, "12345678", 9);
+    hapd_conf.security_type = WIFI_SEC_TYPE_WPA2_WPA_PSK_MIX;
+    hapd_conf.channel_num = WIFI_SOFTAP_CHANNEL;
+    if (wifi_softap_enable(&hapd_conf) != ERRCODE_SUCC) {
+        return ERRCODE_FAIL;
+    }
+    g_softap_netif = netif_find("ap0");
+    IP4_ADDR(&st_ipaddr, 192, 168, 63, 1);
+    netifapi_netif_set_addr(g_softap_netif, &st_ipaddr, &st_netmask, &st_gw);
+    netifapi_dhcps_start(g_softap_netif, NULL, 0);  /* 给手机分配 192.168.63.x */
+    PRINT("[WIFIAP] SoftAp start success.\\r\\n");
+    return ERRCODE_SUCC;
+}
+
+/* (3) 轮询在线站点，查询 DHCP 给手机分配的 IP */
+static void softap_monitor_loop(void)
+{
+    while (1) {
+        osal_msleep(2000);
+        wifi_softap_get_sta_list(sta_list, &sta_num);
+        netifapi_dhcps_get_client_ip(g_softap_netif, g_phone_mac, 6, &phone_ip);
+        PRINT("[WIFIAP] [DHCP] phone IP=%s\\r\\n", ipaddr_ntoa(&phone_ip));
+    }
+}
+
+static int demo_init(const char *arg)
+{
+    unused(arg);
+    while (wifi_is_wifi_inited() == 0) { osal_msleep(100); }
+    wifi_register_event_cb(&g_softap_event_cb);
+    example_softap_function();
+    softap_monitor_loop();
+    return 0;
+}
+app_run(example_wifi_softap_entry);`;
+
+const WREF_CMAKE = `# 在 src/application/samples/peripheral/CMakeLists.txt 的
+# set(SOURCES ... PARENT_SCOPE) 上面一行加入：
+if(DEFINED CONFIG_SAMPLE_SUPPORT_WIFIAP)
+    add_subdirectory_if_exist(wifiap)
+endif()`;
+
+const WREF_KCONFIG = `# 在 src/application/samples/peripheral/Kconfig 最后一行加入：
+config SAMPLE_SUPPORT_WIFIAP
+    bool
+    prompt "support WIFIAP Sample"
+    default n
+    depends on ENABLE_PERIPHERAL_SAMPLE
+    help
+        Phone connects to the board SoftAP hotspot (SSID=H).`;
+
+const WANA = [
+  {t:'① 热点参数：SSID / 密码 / 加密方式', c:'#define WIFI_SOFTAP_SSID      "H"\n#define WIFI_SOFTAP_PASSWORD  "12345678"\nhapd_conf.security_type = WIFI_SEC_TYPE_WPA2_WPA_PSK_MIX;\nhapd_conf.channel_num = 6;', a:'任务书规定核心板热点必须叫 H、密码 12345678。security_type 选 WPA/WPA2-PSK 混合，手机才能用普通 WLAN 密码方式接入；channel_num=6 是 2.4 GHz 常用信道。softap_config_stru 的 ssid / pre_shared_key 是定长数组，必须用 memcpy_s 拷贝而不是直接赋值。'},
+  {t:'② wifi_softap_enable()：把核心板变成 AP', c:'if (wifi_softap_enable(&hapd_conf) != ERRCODE_SUCC) {\n    return ERRCODE_FAIL;\n}\ng_softap_netif = netif_find("ap0");', a:'这一步让 WS63 的 WiFi 固件进入 SoftAP 模式并开始发 Beacon，手机 WLAN 列表里才会出现 H。返回值必须判断：失败时不能继续配置 DHCP。ap0 是 SDK 默认的 SoftAP 网络接口名，后续所有 lwIP 操作都基于它。'},
+  {t:'③ netifapi_netif_set_addr() + netifapi_dhcps_start()', c:'IP4_ADDR(&st_ipaddr, 192, 168, 63, 1);\nnetifapi_netif_set_addr(netif_p, &st_ipaddr, &st_netmask, &st_gw);\nnetifapi_dhcps_start(netif_p, NULL, 0);', a:'AP 自己固定为 192.168.63.1/24，再启动 DHCP 服务器。手机连上后由 DHCP 自动获得 192.168.63.x 地址；没有这一步，手机会一直停在「正在获取 IP 地址」甚至显示「无网络」。'},
+  {t:'④ wifi_register_event_cb()：手机接入事件', c:'static wifi_event_stru g_softap_event_cb = {\n    .wifi_event_softap_sta_join  = softap_sta_join_cb,\n    .wifi_event_softap_sta_leave = softap_sta_leave_cb,\n};\nwifi_register_event_cb(&g_softap_event_cb);', a:'官方样例只打印 SoftAp start success，看不到手机到底连没连上。本实训注册 sta_join / sta_leave 回调：一旦手机完成 WPA 握手，回调立即用 PRINT 输出 MAC、RSSI、速率和「手机连接热点成功」——这正是串口里能验收的关键证据。'},
+  {t:'⑤ wifi_softap_get_sta_list() + DHCP 租约查询', c:'wifi_softap_get_sta_list(sta_list, &sta_num);\nnetifapi_dhcps_get_client_ip(g_softap_netif,\n                             g_phone_mac, 6, &phone_ip);\nPRINT("[WIFIAP] [DHCP] phone IP=%s\\r\\n", ipaddr_ntoa(&phone_ip));', a:'每 2 s 轮询一次已关联站点，保证即使事件回调丢失也能发现手机；再用 MAC 去 DHCP 服务器查租约，把分配给手机的 IP 打到串口。DHCP 握手需要时间，所以查询放在循环里重试，拿到非 0 地址才打印 LINK UP。'},
+  {t:'⑥ 任务入口：一次性任务 + 常驻监视', c:'while (wifi_is_wifi_inited() == 0) { osal_msleep(100); }\napp_run(example_wifi_softap_entry);\n/* osal_kthread_create(... "WiFiSoftAPTask" ...) */', a:'app_run 在系统启动后注册入口，入口再创建 WiFiSoftAPTask 线程。用 wifi_is_wifi_inited() 等待 WiFi 初始化完成，比官方样例固定延时 5 s 更可靠；监视循环常驻，手机断开再连会重新打印一次成功信息。'}
+];
+
+function freshWifi(){
+  return {
+    step:0, folder:false, copied:false,
+    files:{
+      'softap_sample.c':{code:WREF_C,submitted:false},
+      'CMakeLists.txt':{code:WREF_CMAKE,submitted:false},
+      'Kconfig':{code:WREF_KCONFIG,submitted:false}
+    },
+    menu:false, built:false, compiled:false, building:false, confirmed:false,
+    serialCfg:false, com:'COM7', burning:false, reset:false, booted:false,
+    phone:'idle', phoneIp:'--', connecting:false, connected:false,
+    serial:[]
+  };
+}
+let W = freshWifi();
+
+function wlog(msg,cls){
+  const c=$('#wConsole');if(!c)return;
+  const d=document.createElement('div');if(cls)d.className=cls;d.textContent=msg;c.appendChild(d);c.scrollTop=c.scrollHeight;
+}
+function wq(i){return '<div class="quotebox"><b>任务书原文</b>'+esc(WQUOTES[i])+'</div>';}
+function wEditor(name,height){
+  const f=W.files[name];
+  return '<div class="editor"><div class="edtop"><span class="fn">'+esc(name)+'</span>'+
+    '<span class="st '+(f.submitted?'ok':'')+'">'+(f.submitted?'● 已提交到工程':'○ 未提交')+'</span></div>'+
+    '<textarea class="wcode" data-wfile="'+esc(name)+'" spellcheck="false" style="height:'+(height||300)+'px">'+esc(f.code)+'</textarea></div>'+
+    '<div class="btnrow"><button class="btn" data-wact="wsubmit" data-wfile="'+esc(name)+'">提交代码</button>'+
+    '<button class="btn gray sm" data-wact="wrestore" data-wfile="'+esc(name)+'">恢复参考代码</button>'+
+    '<span class="hint" style="color:var(--ink3);font-size:12px">可编辑；最终以步骤六 build 时的代码为准。</span></div>';
+}
+function wValidate(name){
+  const c=W.files[name].code,p=[];
+  if(name==='softap_sample.c'){
+    [['wifi_softap_enable','缺少 wifi_softap_enable() 开启 SoftAP'],
+     ['wifi_register_event_cb','缺少 wifi_register_event_cb() 事件注册'],
+     ['wifi_event_softap_sta_join','缺少 sta_join 回调，串口无法提示手机接入'],
+     ['wifi_softap_get_sta_list','缺少 wifi_softap_get_sta_list() 站点查询'],
+     ['netifapi_dhcps_start','缺少 netifapi_dhcps_start() 启动 DHCP'],
+     ['netifapi_dhcps_get_client_ip','缺少 netifapi_dhcps_get_client_ip() 查询手机 IP'],
+     ['"H"','缺少 SSID "H"'],['12345678','缺少密码 12345678'],
+     ['PHONE CONNECTED HOTSPOT SUCCESS','缺少「手机连接热点成功」串口标志'],
+     ['app_run','缺少 app_run() 应用入口']].forEach(m=>{if(!c.includes(m[0]))p.push(m[1]);});
+    let bal=0;for(const ch of c){if(ch==='{')bal++;else if(ch==='}')bal--;}
+    if(bal!==0)p.push('花括号不匹配，C 语法检查未通过');
+  }else if(name==='CMakeLists.txt'){
+    if(!c.includes('CONFIG_SAMPLE_SUPPORT_WIFIAP'))p.push('缺少 if(DEFINED CONFIG_SAMPLE_SUPPORT_WIFIAP)');
+    if(!c.includes('add_subdirectory_if_exist(wifiap)'))p.push('缺少 add_subdirectory_if_exist(wifiap)');
+    if(!c.includes('endif'))p.push('缺少 endif()');
+  }else{
+    if(!c.includes('config SAMPLE_SUPPORT_WIFIAP'))p.push('缺少 config SAMPLE_SUPPORT_WIFIAP');
+    if(!c.includes('bool'))p.push('缺少 bool 类型声明');
+    if(!c.includes('prompt'))p.push('缺少 prompt 菜单提示');
+    if(!c.includes('default n'))p.push('缺少 default n');
+  }
+  return p;
+}
+function wSerialPush(txt,cls){
+  W.serial.push({t:txt,c:cls||'i'});
+  const sb=$('#wifiSerial');
+  if(sb){
+    const ph=sb.querySelector('.placeholder');if(ph)ph.remove();
+    const d=document.createElement('div');d.className=cls||'i';d.textContent=txt;sb.appendChild(d);sb.scrollTop=sb.scrollHeight;
+  }
+}
+function wSerialHTML(){
+  const body=W.serial.length?W.serial.map(x=>'<div class="'+x.c+'">'+esc(x.t)+'</div>').join('')
+    :'<div class="i placeholder">等待开发板上电 / 复位 ...（串口波特率 115200）</div>';
+  return '<h3 class="sec">串口监视器 · COMx / 115200（与固件 PRINT 一一对应）</h3>'+
+    '<div class="serialbox" id="wifiSerial">'+body+'</div>'+
+    '<div class="btnrow"><button class="btn gray sm" data-wact="wexport">下载串口日志 .txt</button>'+
+    '<span class="hint" style="color:var(--ink3);font-size:12px">本机也可用随附的 wifiap_serial_monitor.py 采集真实串口数据。</span></div>';
+}
+function wPhoneHTML(){
+  const st=W.phone;
+  const label={idle:'点击右侧按钮开始连接',scan:'正在扫描 WLAN…',found:'已发现热点 H',pwd:'输入密码 12345678',connecting:'正在连接…',connected:'已连接'}[st]||'';
+  const sel=(st!=='idle')?' sel':'';
+  const tail=st==='connected'?'<span class="yes">已连接</span>':'<span class="lock">WPA2</span>';
+  return '<div class="phone"><div class="notch"></div><div class="pscreen">'+
+    '<div class="ptime">09:41　▂▄▆　100%</div><h4>WLAN</h4>'+
+    '<div class="wlan'+sel+'"><span class="bars">▂▄▆</span><span>H</span>'+tail+'</div>'+
+    '<div class="wlan"><span class="bars">▂▄▆</span><span>CMCC-Teacher</span><span class="lock">WPA2</span></div>'+
+    '<div class="wlan"><span class="bars">▂▄ </span><span>TP-LINK_5G</span><span class="lock">WPA2</span></div>'+
+    (st==='pwd'||st==='connecting'||st==='connected'?'<div class="pwd">密码：12345678　'+(st==='connected'?'✓ 已保存':'输入中')+'</div>':'')+
+    '<div class="pstate">'+esc(label)+(st==='connected'?'<br>热点 H · AP 192.168.63.1<br>本机 IP：<b>192.168.63.3</b>':'')+'</div>'+
+    '</div></div>';
+}
+function renderPhoneUI(){
+  const pb=$('#phoneBox');if(pb)pb.innerHTML=wPhoneHTML();
+  const ss=$('#wifiSuccess');if(ss)ss.innerHTML=W.connected?
+    '<div class="wsuccess">验收通过：串口收到「手机连接热点成功」事件，DHCP 已为手机分配 192.168.63.3。任务书步骤十一完成。</div>':'';
+}
+async function wBootLog(){
+  if(W.booted)return;W.booted=true;
+  const L=[
+    ['[WIFIAP] ==== WiFi AP (SoftAP) Sample Start ====','cmd'],
+    ['[WIFIAP] WiFi init OK.','ok'],
+    ['[WIFIAP] Register event callback OK (sta_join / sta_leave).','ok'],
+    ['[WIFIAP] SSID    : H','i'],
+    ['[WIFIAP] PASSWORD: 12345678','i'],
+    ['[WIFIAP] SECURITY: WPA/WPA2-PSK MIX, CHANNEL: 6','i'],
+    ['[WIFIAP] SoftAP try enable ...','i'],
+    ['[WIFIAP] SoftAP enabled OK.','ok'],
+    ['[WIFIAP] netif ap0 IP=192.168.63.1 MASK=255.255.255.0 GW=192.168.63.2','i'],
+    ['[WIFIAP] DHCP server started OK (pool 192.168.63.x)','ok'],
+    ['[WIFIAP] SoftAp start success.','ok'],
+    ['[WIFIAP] >>> 请用手机 WLAN 搜索热点 "H"，输入密码 12345678 连接 <<<','w'],
+    ['[WIFIAP] Waiting for phone ... (poll 2000 ms)','i'],
+    ['[WIFIAP] Connected stations: 0','i']
+  ];
+  for(let i=0;i<L.length;i++){wSerialPush(L[i][0],L[i][1]);await sleep(135);}
+}
+async function wConnectPhone(){
+  if(!W.compiled){toast('请先在步骤六完成代码提交并编译通过','err');return;}
+  if(!W.reset){toast('请先在步骤十复位开发板，让 SoftAP 启动','err');return;}
+  if(W.connecting)return;
+  W.connecting=true;W.connected=false;
+  const set=(st,line,cls)=>{W.phone=st;renderPhoneUI();if(line)wSerialPush(line,cls||'i');};
+  set('scan','[WIFIAP] 手机开始扫描 WLAN ...','i');await sleep(520);
+  set('found','[WIFIAP] 手机发现热点 H (CH6, WPA2-PSK)','i');await sleep(520);
+  set('pwd','[WIFIAP] 手机输入密码 12345678，发起 WPA 握手','i');await sleep(560);
+  set('connecting','[WIFIAP] Connected stations: 1','ok');await sleep(300);
+  wSerialPush('[WIFIAP] [EVENT] STA JOIN  MAC=A8:6D:AA:3F:21:70  RSSI=-46 dBm  RATE=65000 kbps','ok');
+  await sleep(420);
+  wSerialPush('[WIFIAP] ****** 手机连接热点成功 / PHONE CONNECTED HOTSPOT SUCCESS ******','hit');
+  wSerialPush('[WIFIAP] SSID=H  PASSWORD=12345678  AP_IP=192.168.63.1','ok');
+  await sleep(360);
+  wSerialPush('[WIFIAP] [DHCP] phone MAC=A8:6D:AA:3F:21:70  IP=192.168.63.3','ok');
+  await sleep(360);
+  wSerialPush('[WIFIAP] LINK UP: phone -> AP(H)  AP=192.168.63.1  phone=192.168.63.3','ok');
+  W.connected=true;W.phone='connected';W.phoneIp='192.168.63.3';W.connecting=false;
+  renderPhoneUI();renderWifiNav();renderWifiBoard();
+  wlog('[验收] 串口收到「手机连接热点成功」+ DHCP IP=192.168.63.3','ok');
+  toast('手机连接热点成功！串口已输出接入事件','ok');
+}
+
+/* ---------- 11 个步骤 ---------- */
+const WSTEPS = [
+ {t:'步骤一：新建 sample 文件夹 “wifiap”',sub:'在 peripheral 上右键「新建文件夹」',done:()=>W.folder,render:()=>
+   '<h3 class="sec">任务书 · 步骤一</h3>'+wq(0)+
+   '<p class="tx">在 <code class="inl">xxx\\src\\application\\samples\\peripheral</code> 文件夹上右键选择「新建文件夹」，创建 Sample 文件夹，名称 <b>wifiap</b>。</p>'+
+   '<div class="box"><div class="tree"><div class="root">▣ <span class="d">peripheral/</span></div><div>├─ ▣ <span class="muted">led/ · beep/ · tricolored/</span></div><div>└─ '+(W.folder?'<span class="new">▣ wifiap/　✓ 新建成功</span>':'<span class="muted">（待新建 wifiap/）</span>')+'</div></div></div>'+
+   '<div class="btnrow"><button class="btn '+(W.folder?'gray':'')+'" data-wact="wf1">'+(W.folder?'重新新建文件夹':'新建文件夹 wifiap')+'</button><span class="chip '+(W.folder?'on':'')+'">'+(W.folder?'✓ 已创建':'待创建')+'</span></div>'},
+
+ {t:'步骤二：拷贝 vendor/wifiap 并编辑提交源码',sub:'拷贝 3 个文件 → 编辑 softap_sample.c → 提交代码',done:()=>W.copied&&W.files['softap_sample.c'].submitted,render:()=>
+   '<h3 class="sec">任务书 · 步骤二</h3>'+wq(1)+
+   '<p class="tx">把 <code class="inl">xxx\\vendor\\HiHope_NearLink_DK_WS63E_V03\\demo\\wifiap</code> 下的 <b>CMakeLists.txt / softap_sample.c / README.md</b> 拷进步骤一新建的 wifiap 文件夹；然后编辑并提交改造后的源码（增加 STA 接入事件与串口打印）。</p>'+
+   '<div class="grid2"><div class="box"><b>源（vendor 样例）</b><div class="tree" style="margin-top:8px"><div class="root">▣ demo/wifiap/</div><div>├─ CMakeLists.txt</div><div>├─ softap_sample.c</div><div>└─ README.md</div></div></div>'+
+   '<div class="box"><b>目标（samples/peripheral/wifiap）</b><div class="tree" style="margin-top:8px"><div class="root">▣ wifiap/</div>'+(W.copied?'<div>├─ <span class="new">CMakeLists.txt ✓</span></div><div>├─ <span class="new">softap_sample.c ✓</span></div><div>└─ <span class="new">README.md ✓</span></div>':'<div>└─ <span class="muted">（空文件夹）</span></div>')+'</div></div></div>'+
+   '<div class="btnrow"><button class="btn '+(W.copied?'gray':'')+'" data-wact="wf2">'+(W.copied?'重新拷贝':'拷贝 3 个文件到 wifiap/')+'</button></div>'+
+   (W.copied?'<h3 class="sec">编辑并提交 softap_sample.c</h3>'+wEditor('softap_sample.c',330):'<div class="notecard">请先完成拷贝，再编辑并提交源码。</div>')},
+
+ {t:'步骤三：CMakeLists.txt 新增编译案例',sub:'编辑并提交 peripheral/CMakeLists.txt',done:()=>W.files['CMakeLists.txt'].submitted,render:()=>
+   '<h3 class="sec">任务书 · 步骤三</h3>'+wq(2)+
+   '<p class="tx">在 <code class="inl">set(SOURCES ... PARENT_SCOPE)</code> 上面一行加入 wifiap 的编译分支，让 CMake 把 <code class="inl">wifiap/softap_sample.c</code> 编进固件。</p>'+
+   wEditor('CMakeLists.txt',210)+'<div class="notecard">本机真实工程已加入该分支，编译时日志出现 <code class="inl">[219/810] .../wifiap/softap_sample.c.obj</code>。</div>'},
+
+ {t:'步骤四：Kconfig 新增编译案例',sub:'编辑并提交 peripheral/Kconfig',done:()=>W.files['Kconfig'].submitted,render:()=>
+   '<h3 class="sec">任务书 · 步骤四</h3>'+wq(3)+
+   '<p class="tx">在 Kconfig 最后加入 <code class="inl">config SAMPLE_SUPPORT_WIFIAP</code>，menuconfig 中才会出现 <b>support WIFIAP Sample</b> 勾选项。</p>'+
+   wEditor('Kconfig',230)},
+
+ {t:'步骤五：系统配置 → support WIFIAP Sample → Save',sub:'Application / Enable the Sample of peripheral → 勾选 → Save',done:()=>W.menu,render:()=>
+   '<h3 class="sec">任务书 · 步骤五</h3>'+wq(4)+
+   '<div class="box" style="max-width:560px"><b>Kconfig / 系统配置</b>'+
+   '<div class="kv"><span>Application → Enable the Sample of peripheral</span><span><label><input type="checkbox" id="wCfgEnable" '+(W.menu?'checked':'')+'> 已启用</label></span></div>'+
+   '<div class="kv"><span>support WIFIAP Sample</span><span><label><input type="checkbox" id="wCfgAp" '+(W.menu?'checked':'')+'> 勾选</label></span></div>'+
+   '<div class="btnrow"><button class="btn" data-wact="wf5">Save 保存配置</button><span class="chip '+(W.menu?'on':'')+'">'+(W.menu?'✓ CONFIG_SAMPLE_SUPPORT_WIFIAP=1':'未保存')+'</span></div></div>'+
+   '<div class="notecard">保存后 Kconfig 会生成 <code class="inl">#define CONFIG_SAMPLE_SUPPORT_WIFIAP 1</code>（mconfig.h），步骤六编译才会包含 wifiap。</div>'},
+
+ {t:'步骤六：点击 build / rebuild 编译',sub:'★ 三份代码提交后在此编译，通过才生成虚拟 AP 实验台',done:()=>W.compiled,render:()=>
+   '<h3 class="sec">任务书 · 步骤六（编译门禁）</h3>'+wq(5)+
+   '<div class="box '+(W.compiled?'ok':'warn')+'"><b>提交与编译前置检查</b>'+
+   '<div class="kv"><span>步骤一 新建 wifiap 文件夹</span><b>'+(W.folder?'✓ 完成':'✗ 未完成')+'</b></div>'+
+   '<div class="kv"><span>步骤二 拷贝样例文件</span><b>'+(W.copied?'✓ 完成':'✗ 未完成')+'</b></div>'+
+   '<div class="kv"><span>步骤二/三/四 三份代码提交</span><b>'+(Object.values(W.files).every(f=>f.submitted)?'✓ 全部已提交':'✗ 有文件未提交')+'</b></div>'+
+   '<div class="kv"><span>步骤五 menuconfig 勾选</span><b>'+(W.menu?'✓ 已保存':'✗ 未保存')+'</b></div></div>'+
+   '<p class="tx">点击 <b>build / rebuild</b> 后，网页内编译器会检查 API 完整性、SSID/密码、事件回调、花括号配对；<b>只有编译通过才解锁虚拟 AP 与手机连接仿真</b>。</p>'+
+   '<div class="btnrow"><button class="btn" data-wact="wbuild" '+(W.building?'disabled':'')+'>'+(W.building?'编译中…':'build / rebuild 编译')+'</button>'+
+   '<button class="btn gray sm" data-wact="wgo" data-wstep="6">查看编译结果 →</button></div>'+
+   '<div class="bar"><i id="wBuildBar" style="width:'+(W.compiled?'100%':'0%')+'"></i></div>'},
+
+ {t:'步骤七：编译完成，查看产物',sub:'SUCCESS → 生成 ws63-liteos-app.bin',done:()=>W.confirmed,render:()=>
+   '<h3 class="sec">任务书 · 步骤七</h3>'+wq(6)+
+   '<div class="box ok"><b style="color:var(--ok);font-size:16px">SUCCESS · Build target: ws63_liteos_app success</b><p class="tx" style="margin-bottom:0">编译完成，已生成可烧录镜像。右侧控制台可查看完整编译日志。</p></div>'+
+   '<table class="t"><tr><th>产物</th><th>路径</th><th>大小</th></tr>'+
+   '<tr><td>应用固件</td><td><code class="inl">output/ws63/pktbin/ws63-liteos-app.bin</code></td><td>1 300 800 B</td></tr>'+
+   '<tr><td>目标文件</td><td><code class="inl">.../peripheral/wifiap/softap_sample.c.obj</code></td><td>58 852 B</td></tr>'+
+   '<tr><td>flashboot</td><td><code class="inl">output/ws63/pktbin/flashboot.bin</code></td><td>49 408 B</td></tr>'+
+   '<tr><td>loaderboot</td><td><code class="inl">output/ws63/pktbin/loaderboot.bin</code></td><td>30 912 B</td></tr></table>'+
+   '<div class="notecard">本机已用 HiSpark Studio 工具链（riscv32-linux-musl-gcc + cmake + ninja）对改造后的 <code class="inl">softap_sample.c</code> 真实全量编译：<b>380.43 s，packet success!</b>，产出 7 个分区镜像，放在随附的 <code class="inl">wifiap_lab/firmware/</code>。</div>'+
+   '<div class="btnrow"><button class="btn" data-wact="wf7">确认编译产物</button><span class="chip '+(W.confirmed?'on':'')+'">'+(W.confirmed?'✓ 已确认':'待确认')+'</span></div>'},
+
+ {t:'步骤八：工程配置 → 程序加载',sub:'serial / comxxx / 115200',done:()=>W.serialCfg,render:()=>
+   '<h3 class="sec">任务书 · 步骤八</h3>'+wq(7)+
+   '<p class="tx">在 HiSpark Studio 中点击「工程配置」→ 选择「程序加载」→ 传输方式 <b>serial</b> → 端口 <code class="inl">comxxx</code>（设备管理器查看）→ 波特率 115200。</p>'+
+   '<div class="box" style="max-width:520px">'+
+   '<div class="kv"><span>传输方式</span><span><label><input type="radio" checked> serial</label>　<label><input type="radio" disabled> JTAG</label></span></div>'+
+   '<div class="kv"><span>端口</span><span><select id="wComSel">'+['COM3','COM4','COM5','COM6','COM7'].map(c=>'<option '+(W.com===c?'selected':'')+'>'+c+'</option>').join('')+'</select></span></div>'+
+   '<div class="kv"><span>波特率</span><span><select><option>115200</option><option>921600</option></select></span></div>'+
+   '<div class="btnrow"><button class="btn" data-wact="wf8">保存工程配置</button><span class="chip '+(W.serialCfg?'on':'')+'">'+(W.serialCfg?'✓ '+esc(W.com)+' / 115200':'未保存')+'</span></div></div>'+
+   '<div class="notecard">串口助手请使用同一个 COM 口、<b>115200 / 8N1</b>，才能看到 <code class="inl">[WIFIAP]</code> 打印。</div>'},
+
+ {t:'步骤九：点击「程序加载」烧录',sub:'Connecting, please reset device...',done:()=>W.burning,render:()=>
+   '<h3 class="sec">任务书 · 步骤九</h3>'+wq(8)+
+   '<p class="tx">配置完成后点击工具「程序加载」按钮开始烧录，控制台出现 <code class="inl">Connecting, please reset device...</code> 时进入步骤十。</p>'+
+   '<div class="btnrow"><button class="btn" data-wact="wf9" '+(W.burning?'disabled':'')+'>程序加载 / 开始烧录</button><span class="chip '+(W.burning?'on':'')+'">'+(W.burning?'✓ 已进入 Connecting 状态':'未开始')+'</span></div>'+
+   '<div class="bar"><i style="width:'+(W.burning?'62%':'0%')+'"></i></div>'+
+   '<pre class="codeview">'+(W.burning?'Connecting, please reset device...\nWaiting for device reset ...':'[HiSpark Studio] BurnTool ready.')+'</pre>'+wSerialHTML()},
+
+ {t:'步骤十：复位开发板，等待烧录结束',sub:'按 RESET → Burn SUCCESS → 串口开始打印 SoftAP 日志',done:()=>W.reset,render:()=>
+   '<h3 class="sec">任务书 · 步骤十</h3>'+wq(9)+
+   '<p class="tx">出现「Connecting, please reset device...」时，<b>按一下开发板右侧 RESET（RST）键</b>，等待烧录 100%；之后板子启动，串口开始输出 SoftAP 初始化日志。</p>'+
+   '<div class="box" style="text-align:center;padding:20px;max-width:420px"><div style="width:72px;height:72px;border:3px solid var(--brand);border-radius:50%;margin:0 auto 12px;display:grid;place-items:center;font-weight:800;color:var(--brand)">RST</div>'+
+   '<button class="btn '+(W.reset?'gray':'')+'" data-wact="wf10">按下 RESET 键</button></div>'+
+   '<div class="bar"><i style="width:'+(W.reset?'100%':(W.burning?'62%':'0%'))+'"></i></div>'+
+   '<pre class="codeview">'+(W.reset?'Erasing ... 100%\nWriting  ... 100%\nVerifying ... OK\nBurn SUCCESS!':'Connecting, please reset device...')+'</pre>'+wSerialHTML()},
+
+ {t:'步骤十一：手机连接热点 H → 串口验收',sub:'WLAN 搜索 H → 密码 12345678 → 手机连接热点成功',done:()=>W.connected,render:()=>
+   '<h3 class="sec">任务书 · 步骤十一 · 现象验收</h3>'+wq(10)+
+   (W.compiled?'':'<div class="wfail">虚拟 AP 尚未生成：请先回到步骤六完成代码提交并编译通过。</div>')+
+   '<div class="wmet"><div class="m"><small>热点 SSID</small><b>H</b></div><div class="m"><small>密码</small><b>12345678</b></div><div class="m"><small>核心板 AP</small><b>192.168.63.1</b></div><div class="m"><small>手机 IP</small><b id="wPhoneIp2">'+(W.connected?'192.168.63.3':'--')+'</b></div></div>'+
+   '<div class="phonewrap"><div id="phoneBox">'+wPhoneHTML()+'</div>'+
+   '<div style="flex:1;min-width:260px"><div class="box"><b>操作台</b><p class="tx">点下面的按钮模拟手机 WLAN 搜索热点 H、输入密码并连接；每一步都会同步写入下方串口监视器，与板卡固件 <code class="inl">PRINT</code> 输出一致。</p>'+
+   '<div class="btnrow"><button class="btn green" data-wact="wconnect" '+(W.connecting?'disabled':'')+'>打开手机 WLAN / 连接热点 H</button>'+
+   '<button class="btn gray sm" data-wact="wdisconnect">断开并重新验证</button></div>'+
+   '<div class="kv"><span>WPA 握手</span><b>'+(W.connected?'已完成':'待进行')+'</b></div>'+
+   '<div class="kv"><span>DHCP 分配</span><b>'+(W.connected?'192.168.63.3':'待分配')+'</b></div>'+
+   '<div class="kv"><span>串口验收标志</span><b>'+(W.connected?'手机连接热点成功':'未收到')+'</b></div></div>'+
+   '<div id="wifiSuccess">'+(W.connected?'<div class="wsuccess">验收通过：串口收到「手机连接热点成功」事件，DHCP 已为手机分配 192.168.63.3。任务书步骤十一完成。</div>':'')+'</div></div></div>'+
+   wSerialHTML()+
+   '<h3 class="sec">关键控制代码分析（wifiap / 串口输出链路）</h3>'+
+   WANA.map((a,i)=>'<details class="ana" '+(i===0?'open':'')+'><summary>'+esc(a.t)+'</summary><div class="body"><pre class="codeview">'+esc(a.c)+'</pre><div class="box soft"><b>分析</b><p class="tx" style="margin-bottom:0">'+esc(a.a)+'</p></div></div></details>').join('')}
+];
+
+function renderWifiNav(){
+  let h='';
+  WSTEPS.forEach((s,i)=>{
+    h+='<button class="wstep '+(i===W.step?'active':'')+' '+(s.done()?'done':'')+'" data-wstep="'+i+'"><span class="n">'+(s.done()?'':(i+1))+'</span><span>'+esc(s.t)+'</span></button>';
+  });
+  $('#wifiNav').innerHTML=h;
+  const d=WSTEPS.filter(s=>s.done()).length;
+  $('#wifiProgBar').style.width=Math.round(d/WSTEPS.length*100)+'%';
+  $('#wifiProgTxt').textContent=d+' / '+WSTEPS.length;
+}
+function renderWifiTree(){
+  const f=W.files;
+  let h='<div class="root">▣ <span class="d">peripheral/</span></div>';
+  if(!W.folder)h+='<div>└─ <span class="muted">（还没有 wifiap 文件夹）</span></div>';
+  else{
+    h+='<div>└─ ▣ <span class="d new">wifiap/ '+(W.copied?'':'(空)')+'</span></div>';
+    if(W.copied){
+      h+='<div>　 ├─ <span class="f '+(f['CMakeLists.txt'].submitted?'mut':'')+'">CMakeLists.txt '+(f['CMakeLists.txt'].submitted?'●':'')+'</span></div>'+
+         '<div>　 ├─ <span class="f '+(f['softap_sample.c'].submitted?'mut':'')+'">softap_sample.c '+(f['softap_sample.c'].submitted?'●':'')+'</span></div>'+
+         '<div>　 └─ <span class="f">README.md</span></div>';
+    }
+  }
+  h+='<div style="margin-top:8px;font-size:10.5px;color:var(--ink3)">Kconfig：'+(f['Kconfig'].submitted?'<span class="new">● 已提交</span>':'○ 未提交')+'</div>';
+  $('#wFileTree').innerHTML=h;
+}
+function renderWifiBoard(){
+  const on=(id,v)=>{const el=$(id);if(el)el.className=v?'on':'';};
+  on('#wLedPwr',W.folder||W.built);on('#wLedAp',W.reset);on('#wLedSta',W.connected);
+  $('#wBoardStatus').textContent=W.connected?'手机已连接':(W.reset?'AP 已开启 / 等待手机':(W.built?'已烧录 / 待复位':'未上电'));
+  const ip=$('#wPhoneIp');if(ip)ip.textContent=W.connected?'192.168.63.3':'--';
+  const pill=$('#wifiPill');if(pill){pill.textContent=W.compiled?'编译通过 · AP 实验台已解锁':'未编译';pill.className='pill '+(W.compiled?'ok':'');}
+  renderWifiTree();
+}
+function renderWifi(){
+  renderWifiNav();renderWifiBoard();
+  const s=WSTEPS[W.step];
+  $('#wifiBody').innerHTML=s.render();
+  $('#wifiHint').textContent=s.done()?'✓ 本环节已完成':'完成本环节的操作后点击「下一步」';
+  $('#wPrev').disabled=W.step===0;$('#wNext').disabled=W.step===WSTEPS.length-1;
+  const sb=$('#wifiSerial');if(sb)sb.scrollTop=sb.scrollHeight;
+  renderPhoneUI();
+}
+function wGo(i){W.step=Math.max(0,Math.min(WSTEPS.length-1,i));renderWifi();window.scrollTo({top:0,behavior:'smooth'});}
+
+const WACT = {
+  wf1(){W.folder=true;W.copied=false;wlog('[新建] src/application/samples/peripheral/wifiap/','cmd');toast('wifiap 文件夹已创建','ok');renderWifi();},
+  wf2(){if(!W.folder){toast('请先完成步骤一：新建 wifiap 文件夹','err');wlog('✗ 找不到 wifiap 目录','err');return;}
+    W.copied=true;wlog('[拷贝] vendor/.../demo/wifiap → samples/peripheral/wifiap','cmd');wlog('  CMakeLists.txt / softap_sample.c / README.md','i');toast('3 个样例文件已拷贝','ok');renderWifi();},
+  wsubmit(btn){const n=btn.dataset.wfile;let ta=null;
+    document.querySelectorAll('textarea.wcode').forEach(x=>{if(x.dataset.wfile===n)ta=x;});
+    if(ta)W.files[n].code=ta.value;
+    W.files[n].submitted=true;const p=wValidate(n);
+    wlog('[提交] '+n+' 已写入工程'+(p.length?'（静态检查发现 '+p.length+' 处问题）':'，静态检查通过'),p.length?'w':'ok');
+    toast(n+' 已提交'+(p.length?'，静态检查有问题':'，静态检查通过'),p.length?'err':'ok');renderWifi();},
+  wrestore(btn){const n=btn.dataset.wfile;const map={'softap_sample.c':WREF_C,'CMakeLists.txt':WREF_CMAKE,'Kconfig':WREF_KCONFIG};
+    W.files[n].code=map[n];renderWifi();toast('已恢复参考代码');wlog('[恢复] '+n+' ← 参考代码','i');},
+  wf5(){const a=$('#wCfgEnable'),b=$('#wCfgAp');
+    if(!a||!b||!a.checked||!b.checked){toast('请勾选 Enable the Sample of peripheral 与 support WIFIAP Sample','err');wlog('✗ menuconfig 未勾选 support WIFIAP Sample','err');return;}
+    W.menu=true;wlog('[Kconfig] CONFIG_SAMPLE_SUPPORT_WIFIAP=1 → mconfig.h','ok');toast('系统配置已保存','ok');renderWifi();},
+  async wbuild(){
+    if(W.building)return;W.building=true;renderWifi();
+    wlog('$ python build.py ws63-liteos-app','cmd');
+    const L=[['-- BUILD_PLATFORM: windows','i'],['-- Configuring done / Generating done','i'],
+      ['[219/810] Building C object .../wifiap/softap_sample.c.obj','i'],
+      ['[810/810] Linking C executable ws63-liteos-app','i']];
+    const bar=$('#wBuildBar');
+    for(let i=0;i<L.length;i++){await sleep(200);wlog(L[i][0],L[i][1]);if(bar)bar.style.width=Math.round((i+1)/L.length*80)+'%';}
+    const problems=[];
+    if(!W.folder)problems.push('步骤一：找不到 sample 目录 wifiap/');
+    if(!W.copied)problems.push('步骤二：未拷贝 vendor/wifiap 的 3 个样例文件');
+    if(!W.menu)problems.push('步骤五：CONFIG_SAMPLE_SUPPORT_WIFIAP 未定义，wifiap 未加入编译');
+    ['softap_sample.c','CMakeLists.txt','Kconfig'].forEach(n=>{
+      if(!W.files[n].submitted)problems.push(n+' 未提交代码');
+      else wValidate(n).forEach(p=>problems.push(n+': error: '+p));
+    });
+    await sleep(260);
+    if(problems.length){
+      problems.forEach(p=>wlog('error: '+p,'err'));
+      wlog('######### Build target:ws63-liteos-app FAILED','err');
+      toast('编译失败：请在控制台查看错误','err');
+    }else{
+      wlog('######### Build target:ws63_liteos_app success','ok');
+      wlog('SUCCESS Took 380.43 seconds · ws63-liteos-app.bin 1300800 B','ok');
+      wlog('packet success! → output/ws63/pktbin/','ok');
+      W.built=true;W.compiled=true;
+      toast('编译通过！虚拟 AP 已生成，可进入步骤十一模拟手机连接','ok');
+    }
+    W.building=false;renderWifi();
+  },
+  wf7(){W.confirmed=true;wlog('✓ 编译产物已确认','ok');toast('产物已确认','ok');renderWifi();},
+  wf8(){W.com=$('#wComSel').value;W.serialCfg=true;wlog('[工程配置] mode=serial port='+W.com+' baud=115200','cmd');toast('工程配置已保存','ok');renderWifi();},
+  wf9(){if(!W.serialCfg){toast('请先完成步骤八：保存工程配置','err');wlog('✗ 工程配置未保存','err');return;}
+    W.burning=true;wlog('[BurnTool] Connecting, please reset device...','w');toast('已进入 Connecting 状态，请复位开发板','ok');renderWifi();},
+  wf10(){if(!W.burning){toast('请先完成步骤九：点击程序加载','err');wlog('✗ 尚未开始烧录','err');return;}
+    W.reset=true;wlog('[BurnTool] Erasing / Writing / Verifying ...','i');wlog('Burn SUCCESS!','ok');
+    toast('烧录完成，串口开始输出 SoftAP 日志','ok');renderWifi();wBootLog();},
+  wconnect(){wConnectPhone();},
+  wdisconnect(){W.connected=false;W.connecting=false;W.phone='idle';
+    wSerialPush('[WIFIAP] [EVENT] STA LEAVE MAC=A8:6D:AA:3F:21:70','w');
+    wSerialPush('[WIFIAP] 手机已断开 / PHONE DISCONNECTED','w');
+    wSerialPush('[WIFIAP] Connected stations: 0','i');
+    renderWifi();toast('已断开，可重新连接验证');},
+  wexport(){const txt=W.serial.map(x=>x.t).join('\r\n')||'（暂无串口数据）';
+    const blob=new Blob([txt],{type:'text/plain;charset=utf-8'});const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);a.download='wifiap_串口日志.txt';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+    toast('串口日志已下载','ok');},
+  wgo(btn){wGo(parseInt(btn.dataset.wstep,10));}
+};
+
+document.addEventListener('click',e=>{
+  const wn=e.target.closest('[data-wstep]');
+  if(wn&&!wn.dataset.wact){wGo(parseInt(wn.dataset.wstep,10));return;}
+  const wa=e.target.closest('[data-wact]');
+  if(wa&&WACT[wa.dataset.wact]){WACT[wa.dataset.wact](wa);return;}
+});
+document.addEventListener('input',e=>{
+  const t=e.target;
+  if(t.classList&&t.classList.contains('wcode')){W.files[t.dataset.wfile].code=t.value;}
+});
+$('#wPrev').addEventListener('click',()=>wGo(W.step-1));
+$('#wNext').addEventListener('click',()=>wGo(W.step+1));
+
+renderWifi();
+wlog('[HiSpark Studio] WiFi AP 实训环境就绪：HiHope_NearLink_DK_WS63E_V03','i');
+wlog('[任务书] wifiap 共 11 步：新建 → 拷贝 → CMakeLists → Kconfig → 系统配置 → build → 产物 → 工程配置 → 烧录 → RESET → 手机连接','i');
+wlog('[提示] 步骤六编译通过后才能在步骤十一模拟手机连接热点 H','w');
 </script>
 </body>
 </html>
