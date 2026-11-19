@@ -24,6 +24,8 @@
  * 4) 串口波特率 115200（CONFIG_UART0_BAUDRATE / DEBUG_UART），用串口助手即可
  *    看到完整过程：WiFi 初始化 -> 开启 SoftAP -> 启动 DHCP -> 等待手机连接
  *    -> STA JOIN -> 分配 IP -> 手机连接热点成功。
+ * 5) 手机拿到 DHCP 地址后再集中打印一次「RESULT / 实训验收」摘要，把热点参数、
+ *    手机 MAC / IP 与「手机连接热点成功」汇总在同一段串口输出里，方便验收核对。
  * ---------------------------------------------------------------------------
  */
 
@@ -222,6 +224,18 @@ static void softap_monitor_loop(void)
                 PRINT("  IP=%s\r\n", ipaddr_ntoa(&phone_ip));
                 PRINT("%s LINK UP: phone -> AP(H)  AP=192.168.63.1  phone=%s\r\n",
                       WIFI_SOFTAP_LOG, ipaddr_ntoa(&phone_ip));
+                /* 验收汇总：把串口中的关键信息集中打印一次，便于人工核对 */
+                PRINT("%s ---------------- RESULT / 实训验收 ----------------\r\n",
+                      WIFI_SOFTAP_LOG);
+                PRINT("%s SSID=%s  PASSWORD=%s  CHANNEL=%d  SECURITY=WPA/WPA2-PSK\r\n",
+                      WIFI_SOFTAP_LOG, WIFI_SOFTAP_SSID, WIFI_SOFTAP_PASSWORD,
+                      WIFI_SOFTAP_CHANNEL);
+                PRINT("%s AP=192.168.63.1  phone MAC=", WIFI_SOFTAP_LOG);
+                softap_print_mac(g_phone_mac);
+                PRINT("  IP=%s\r\n", ipaddr_ntoa(&phone_ip));
+                PRINT("%s ****** 手机连接热点成功 / PHONE CONNECTED HOTSPOT SUCCESS ******\r\n",
+                      WIFI_SOFTAP_LOG);
+                PRINT("%s ---------------- RESULT END ----------------\r\n", WIFI_SOFTAP_LOG);
                 g_phone_ip_printed = 1;
             }
         }
