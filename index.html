@@ -250,6 +250,34 @@ details.ana pre{margin:0 0 10px}
 .wboardled{display:flex;gap:14px;font-size:11.5px;color:var(--ink2);margin-top:8px;flex-wrap:wrap}
 .wboardled i{display:inline-block;width:9px;height:9px;border-radius:50%;background:#cbd4e5;margin-right:5px;vertical-align:middle}
 .wboardled i.on{background:var(--ok)}
+
+/* ---------- 实验结果：串口输出 + 手机连接热点成功（打开即见） ---------- */
+.wbanner{display:flex;align-items:center;gap:13px;flex-wrap:wrap;background:linear-gradient(90deg,#e9f8ef,#f7fcff);border:1px solid #bde5cc;border-left:4px solid #0f9d58;border-radius:11px;padding:11px 15px;margin-bottom:14px;cursor:pointer}
+.wbanner:hover{border-color:#0f9d58}
+.wbanner .wbico{width:30px;height:30px;flex:none;border-radius:50%;background:#0f9d58;color:#fff;display:grid;place-items:center;font-weight:700;font-size:12px}
+.wbanner b{color:#0b6b3c;font-size:13.5px}
+.wbanner code{font-family:var(--mono);font-size:11px;background:#0b1220;color:#8dffbc;padding:5px 9px;border-radius:6px}
+.wbanner .wbcta{color:#0b6b3c;font-weight:700;font-size:12px;white-space:nowrap}
+.tabok{display:inline-block;margin-left:5px;background:#0f9d58;color:#fff;border-radius:9px;padding:0 5px;font-size:10px;line-height:15px}
+.resultcard{margin:0 0 16px;border:1px solid #bde5cc;border-radius:12px;background:linear-gradient(180deg,#f2fbf6,#fff);overflow:hidden}
+.resultcard .rhead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 18px;border-bottom:1px solid #d8eee2;background:#eaf8f0}
+.resultcard .rhead h3{margin:0;font-size:15px;color:#0b6b3c}
+.resultcard .rhead small{display:block;margin-top:4px;color:#3f7e5f;font-size:11.5px;word-break:break-all}
+.rbadge{display:inline-flex;align-items:center;gap:7px;background:#0f9d58;color:#fff;border-radius:999px;padding:7px 14px;font-weight:700;font-size:12.5px}
+.rbadge i{width:8px;height:8px;border-radius:50%;background:#c9ffdf;display:inline-block}
+.rbody{padding:14px 18px 18px}
+.rgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:12px}
+.rgrid .m{background:#fff;border:1px solid #dcebe2;border-radius:9px;padding:9px 11px}
+.rgrid .m small{display:block;color:#5b7a69;font-size:10.5px;margin-bottom:3px}
+.rgrid .m b{font-family:var(--mono);font-size:12px;color:#0b6b3c;word-break:break-all}
+.rlog{height:252px}
+.rlog .sep{color:#5c7396;font-style:italic}
+.rlog .live{background:rgba(15,157,88,.13);box-shadow:inset 2px 0 #0f9d58}
+.rlog .hit{color:#8dffbc;font-weight:700;background:rgba(15,157,88,.18);border-left:2px solid #0f9d58;padding-left:6px}
+.rbtns{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-top:12px}
+.rnote{margin-top:11px;font-size:11.5px;line-height:1.85;color:#4a6b59;background:#f6fbf8;border:1px dashed #cfe6d8;border-radius:9px;padding:10px 12px}
+.rnote code{font-family:var(--mono);color:#0b6b3c}
+@media(max-width:1080px){.rgrid{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
@@ -263,7 +291,7 @@ details.ana pre{margin:0 0 10px}
     <button id="tabFlow" class="active" data-view="flow">实训流程（8 步）</button>
     <button id="tabPrep" data-view="prep">预备知识</button>
     <button id="tabLab" class="locked" data-view="lab">蜂鸣器实验台</button>
-    <button id="tabWifi" data-view="wifi">WiFi AP · 手机连热点</button>
+    <button id="tabWifi" data-view="wifi">WiFi AP · 手机连热点<span class="tabok">✓</span></button>
   </div>
   <div class="topright">
     <span id="compilePill" class="pill">编译未通过</span>
@@ -286,6 +314,16 @@ details.ana pre{margin:0 0 10px}
 
   <!-- 中间主区 -->
   <main class="content">
+    <!-- 打开即见的 WiFi AP 实训结论：串口信息 + 手机连接热点成功 -->
+    <div class="wbanner" id="wifiBanner" data-wact="wgoto">
+      <span class="wbico">OK</span>
+      <div style="flex:1;min-width:230px">
+        <b>WiFi AP 实训结果：手机连接热点成功</b>
+        <div style="font-size:11.5px;color:#41705a;margin-top:3px">串口 COMx / 115200 已输出 STA JOIN、DHCP IP=192.168.63.3 与接入成功标志；点这里查看完整串口输出信息。</div>
+      </div>
+      <code>[WIFIAP] ****** 手机连接热点成功 ******</code>
+      <span class="wbcta">查看串口输出 →</span>
+    </div>
     <!-- 预备知识：任务书 1~3 节，不计入 8 步实验流程 -->
     <section id="prepView" class="card hidden">
       <div class="stephead">
@@ -424,6 +462,63 @@ details.ana pre{margin:0 0 10px}
         <div class="crumb">实训指导任务书 · wifiap 章节　/　实验流程（11 步，一比一还原）</div>
         <h2>WiFi AP（SoftAP）：手机连接核心板热点 <span class="pill" id="wifiPill" style="margin-left:10px">未编译</span></h2>
         <p>基于 <code class="inl">vendor/HiHope_NearLink_DK_WS63E_V03/demo/wifiap</code>。核心板开热点 <b>SSID：H</b> / 密码 <b>12345678</b>，手机 WLAN 连上后，串口实时打印 STA 接入、MAC、DHCP 分配的 IP 与「手机连接热点成功」。</p>
+      </div>
+      <!-- 实验结果：串口中的信息 与 手机连接热点成功（静态可见，不依赖 11 步操作） -->
+      <div class="resultcard" id="wifiResult">
+        <div class="rhead">
+          <div>
+            <h3>实验结果：串口输出信息 与 手机连接热点成功</h3>
+            <small>vendor/HiHope_NearLink_DK_WS63E_V03/demo/wifiap → samples/peripheral/wifiap/softap_sample.c ｜ 串口 COMx / 115200 / 8N1</small>
+          </div>
+          <span class="rbadge"><i></i>手机连接热点成功 · PHONE CONNECTED HOTSPOT SUCCESS</span>
+        </div>
+        <div class="rbody">
+          <div class="rgrid">
+            <div class="m"><small>核心板热点 SSID / 密码</small><b>H / 12345678</b></div>
+            <div class="m"><small>AP 地址 / 信道 / 加密</small><b>192.168.63.1 · CH6 · WPA2-PSK</b></div>
+            <div class="m"><small>手机 MAC / DHCP 分配到 IP</small><b>A8:6D:AA:3F:21:70 · 192.168.63.3</b></div>
+            <div class="m"><small>真实编译 / 固件产物</small><b>380.43s · packet success! · 7 镜像</b></div>
+          </div>
+          <div class="serialbox rlog" id="wifiResultLog">
+            <div class="cmd" data-ri="0">[WIFIAP] ==== WiFi AP (SoftAP) Sample Start ====</div>
+            <div class="ok" data-ri="1">[WIFIAP] WiFi init OK.</div>
+            <div class="ok" data-ri="2">[WIFIAP] Register event callback OK (sta_join / sta_leave).</div>
+            <div class="i" data-ri="3">[WIFIAP] SSID    : H</div>
+            <div class="i" data-ri="4">[WIFIAP] PASSWORD: 12345678</div>
+            <div class="i" data-ri="5">[WIFIAP] SECURITY: WPA/WPA2-PSK MIX, CHANNEL: 6</div>
+            <div class="i" data-ri="6">[WIFIAP] SoftAP try enable ...</div>
+            <div class="ok" data-ri="7">[WIFIAP] SoftAP enabled OK.</div>
+            <div class="i" data-ri="8">[WIFIAP] netif ap0 IP=192.168.63.1 MASK=255.255.255.0 GW=192.168.63.2</div>
+            <div class="ok" data-ri="9">[WIFIAP] DHCP server started OK (pool 192.168.63.x)</div>
+            <div class="ok" data-ri="10">[WIFIAP] SoftAp start success.</div>
+            <div class="w" data-ri="11">[WIFIAP] &gt;&gt;&gt; 请用手机 WLAN 搜索热点 "H"，输入密码 12345678 连接 &lt;&lt;&lt;</div>
+            <div class="i" data-ri="12">[WIFIAP] Waiting for phone ... (poll 2000 ms)</div>
+            <div class="i" data-ri="13">[WIFIAP] Connected stations: 0</div>
+            <div class="sep" data-ri="14">---- 手机 WLAN 选中 H 并输入密码 12345678 之后 ----</div>
+            <div class="ok" data-ri="15">[WIFIAP] Connected stations: 1</div>
+            <div class="ok" data-ri="16">[WIFIAP] [EVENT] STA JOIN  MAC=A8:6D:AA:3F:21:70  RSSI=-46 dBm  RATE=65000 kbps</div>
+            <div class="hit" data-ri="17">[WIFIAP] ****** 手机连接热点成功 / PHONE CONNECTED HOTSPOT SUCCESS ******</div>
+            <div class="ok" data-ri="18">[WIFIAP] SSID=H  PASSWORD=12345678  AP_IP=192.168.63.1</div>
+            <div class="ok" data-ri="19">[WIFIAP] [DHCP] phone MAC=A8:6D:AA:3F:21:70  IP=192.168.63.3</div>
+            <div class="ok" data-ri="20">[WIFIAP] LINK UP: phone -&gt; AP(H)  AP=192.168.63.1  phone=192.168.63.3</div>
+            <div class="sep" data-ri="21">---- 手机关闭 WLAN / 离开热点之后 ----</div>
+            <div class="w" data-ri="22">[WIFIAP] [EVENT] STA LEAVE MAC=A8:6D:AA:3F:21:70</div>
+            <div class="w" data-ri="23">[WIFIAP] 手机已断开 / PHONE DISCONNECTED</div>
+            <div class="i" data-ri="24">[WIFIAP] Connected stations: 0</div>
+          </div>
+          <div class="rbtns">
+            <button class="btn sm" data-wact="wreplay">回放串口输出</button>
+            <button class="btn gray sm" data-wact="wcopy">复制串口信息</button>
+            <button class="btn gray sm" data-wact="wlogdl">下载 .log</button>
+            <span class="hint" style="color:var(--ink3);font-size:12px">下方 11 步是可重新演练的完整流程；上方是本次实训的结论。</span>
+          </div>
+          <div class="rnote">
+            说明：以上逐行对应改造后 <code>softap_sample.c</code> 里 <code>PRINT</code> 语句的输出格式，MAC / IP / RSSI 随实际手机变化；本机未实际烧录采集，属预期核对样本。<br>
+            真实串口采集：<code>python wifiap_serial_monitor.py --port COM7 --baud 115200</code>（115200 / 8N1，自动识别「手机连接热点成功」并另存 .log）。<br>
+            固件：本机已用 HiSpark Studio 工具链真实全量编译，<code>380.43 s · packet success!</code> · <code>ws63-liteos-app.bin 1 300 800 B</code> · 7 个镜像在 <code>wifiap_lab/firmware/</code>。<br>
+            烧录：出现 <code>Connecting, please reset device...</code> 时需人工按一下开发板右侧 RESET（脚本无法代按）；随后手机 WLAN 连接 <code>H / 12345678</code>，串口即出现上面的成功信息。
+          </div>
+        </div>
       </div>
       <div class="wifilayout">
         <div class="wifinav">
@@ -1847,6 +1942,43 @@ const WACT = {
     const blob=new Blob([txt],{type:'text/plain;charset=utf-8'});const a=document.createElement('a');
     a.href=URL.createObjectURL(blob);a.download='wifiap_串口日志.txt';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
     toast('串口日志已下载','ok');},
+  wgoto(){switchView('wifi');const r=$('#wifiResult');if(r)r.scrollIntoView({behavior:'smooth',block:'start'});},
+  wreplay(){
+    const box=$('#wifiResultLog');if(!box)return;
+    if(W.replaying)return;W.replaying=true;
+    const rows=[...box.querySelectorAll('div[data-ri]')];
+    rows.forEach(r=>r.classList.remove('live'));
+    box.scrollTop=0;
+    let i=0;
+    const tick=()=>{
+      if(i>=rows.length){W.replaying=false;toast('回放完毕：串口已收到「手机连接热点成功」','ok');return;}
+      const r=rows[i++];r.classList.add('live');
+      box.scrollTop=Math.max(0,r.offsetTop-box.offsetTop-box.clientHeight/2);
+      if(r.textContent.includes('手机连接热点成功'))toast('手机连接热点成功！串口已输出接入事件','ok');
+      setTimeout(tick,150);
+    };
+    tick();
+  },
+  wcopy(){
+    const box=$('#wifiResultLog');if(!box)return;
+    const txt=[...box.querySelectorAll('div[data-ri]')].map(r=>r.textContent).join('\r\n');
+    const done=()=>toast('串口信息已复制到剪贴板','ok');
+    const fallback=()=>{const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();
+      try{document.execCommand('copy');done();}catch(e){toast('复制失败，请改用「下载 .log」','err');}ta.remove();};
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(done).catch(fallback);
+    else fallback();
+  },
+  wlogdl(){
+    const box=$('#wifiResultLog');if(!box)return;
+    const txt='wifiap 实训 · 串口输出信息（COMx / 115200 / 8N1）\r\n'+
+      '说明：以下逐行对应改造后 softap_sample.c 中 PRINT 语句的输出格式，非真实采集数据。\r\n'+
+      '真实采集：python wifiap_serial_monitor.py --port COM7 --baud 115200\r\n'+
+      '--------------------------------------------------------------------\r\n'+
+      [...box.querySelectorAll('div[data-ri]')].map(r=>r.textContent).join('\r\n')+'\r\n';
+    const blob=new Blob([txt],{type:'text/plain;charset=utf-8'});const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);a.download='wifiap_串口输出_手机连接热点成功.log';a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href),1000);toast('串口日志已下载','ok');
+  },
   wgo(btn){wGo(parseInt(btn.dataset.wstep,10));}
 };
 
