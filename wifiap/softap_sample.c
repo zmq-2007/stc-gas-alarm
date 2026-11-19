@@ -21,17 +21,20 @@
  *    RSSI、速率，并给出「手机连接热点成功」的明确提示。
  * 3) 新增站点轮询任务：wifi_softap_get_sta_list() 枚举已连接设备，
  *    netifapi_dhcps_get_client_ip() 查询 DHCP 给手机分配的 IP，一并打印到串口。
- * 4) 串口波特率 115200（CONFIG_UART0_BAUDRATE / DEBUG_UART），用串口助手即可
- *    看到完整过程：WiFi 初始化 -> 开启 SoftAP -> 启动 DHCP -> 等待手机连接
- *    -> STA JOIN -> 分配 IP -> 手机连接热点成功。
- * 5) 手机拿到 DHCP 地址后再集中打印一次「RESULT / 实训验收」摘要，把热点参数、
- *    手机 MAC / IP 与「手机连接热点成功」汇总在同一段串口输出里，方便验收核对。
- * 6) 排障加固（烧录后搜不到热点的情况）：
- *    - 取消「无限等待 wifi_is_wifi_inited()」，改为 15 s 有限等待 + 显式 wifi_init() 兜底，
- *      避免 WiFi host 未置位时任务永远卡死、SoftAP 永不启动（vendor 原版是固定 5 s 延时）。
- *    - 事件回调注册 / 高级配置 / DHCP 配置失败只告警，不再 return 或 wifi_softap_disable()，
- *      保证「热点先起来」优先；每步都把返回码打印到串口，便于定位。
- *    - 显式设置 hidden_ssid_flag=1（不隐藏 SSID），并对 wifi_softap_enable() 做 3 次重试。
+ * 4) 手机拿到 DHCP 地址后集中打印一次「RESULT / 实训验收」摘要。
+ * 5) 【本版关键修复 · 确定性根因】
+ *    wifi_softap_enable() -> wifi_get_enable_status() 强制要求
+ *    uapi_wifi_get_init_status() == 1，而该状态只能由 wifi_init() 置位。
+ *    本工程 ws63_liteos_app.config 中 # CONFIG_ENABLE_WIFI_SAMPLE is not set，
+ *    启动链里没有任何地方调用 wifi_init()（全工程仅 AT+WIFIINIT、
+ *    PM 唤醒恢复 pm_porting.c、plat_reset_board() 会调）。
+ *    因此 vendor 原版「固定 5 s 延时后直接 wifi_softap_enable()」在本 target 下
+ *    必然返回 FAIL，热点根本不会广播 —— 这就是「烧录后没有网络」的真正原因。
+ *    本版改为：开机固定延时等 WiFi device 就绪 -> 样例主动调用 wifi_init()
+ *    （带返回码与状态打印、有限重试）-> 再开启 SoftAP；enable 失败持续重试，
+ *    并允许中途由串口 AT+WIFIINIT 手动初始化后自动接上。
+ * 6) hidden_ssid_flag=1（不隐藏 SSID）；回调 / netif / DHCP 失败只告警，
+ *    绝不调用 wifi_softap_disable() 把已起来的热点关掉。
  * ---------------------------------------------------------------------------
  */
 
@@ -52,9 +55,15 @@
 #define WIFI_SOFTAP_MAX_STA         6       /* 与 at_wifi.h 的 WIFI_MAX_NUM_USER 一致 */
 #define WIFI_SOFTAP_POLL_MS         2000    /* 每 2 s 查询一次在线站点 */
 #define WIFI_SOFTAP_LOG             "[WIFIAP]"
-#define WIFI_SOFTAP_INIT_WAIT_MS    15000   /* 最长等待 WiFi host 初始化 15 s，绝不无限等 */
+#define WIFI_SOFTAP_BUILD           "v4-wifiinit-fix"
+
+#define WIFI_SOFTAP_BOOT_DELAY_MS   5000    /* 固定 5 s，等 WiFi device 侧就绪（vendor 原版做法） */
+#define WIFI_SOFTAP_INIT_WAIT_MS    15000   /* 有限等待上限，绝不无限死等 */
 #define WIFI_SOFTAP_INIT_STEP_MS    100
-#define WIFI_SOFTAP_ENABLE_RETRY    3       /* softap_enable 失败重试次数 */
+#define WIFI_SOFTAP_INIT_RETRY      10      /* wifi_init() 主动初始化重试次数 */
+#define WIFI_SOFTAP_INIT_RETRY_MS   2000
+#define WIFI_SOFTAP_ENABLE_RETRY    60      /* enable 持续重试 60 * 2s = 120s，可自愈 */
+#define WIFI_SOFTAP_ENABLE_RETRY_MS 2000
 
 /* 任务书要求的固定热点参数 */
 #define WIFI_SOFTAP_SSID            "H"
@@ -119,6 +128,51 @@ static wifi_event_stru g_softap_event_cb = {
     .wifi_event_softap_sta_leave     = softap_sta_leave_cb,
 };
 
+/* 有限等待 WiFi 初始化状态；绝不无限死等 */
+static int32_t softap_wait_init(uint32_t timeout_ms)
+{
+    uint32_t waited = 0;
+    while (waited < timeout_ms) {
+        if (wifi_is_wifi_inited() != 0) {
+            return 1;
+        }
+        (void)osal_msleep(WIFI_SOFTAP_INIT_STEP_MS);
+        waited += WIFI_SOFTAP_INIT_STEP_MS;
+    }
+    return wifi_is_wifi_inited();
+}
+
+/* 【根因修复】本 target 启动链不会调用 wifi_init()，必须由样例主动初始化 */
+static int32_t softap_ensure_wifi_init(void)
+{
+    int32_t i;
+    errcode_t ret;
+
+    if (wifi_is_wifi_inited() != 0) {
+        PRINT("%s [DIAG] WiFi already inited (status=1), skip wifi_init().\r\n", WIFI_SOFTAP_LOG);
+        return 1;
+    }
+    PRINT("%s [DIAG] ROOT CAUSE: wifi_get_enable_status() needs init_status=1,\r\n", WIFI_SOFTAP_LOG);
+    PRINT("%s [DIAG] but this target has NO startup wifi_init() -> call it here.\r\n", WIFI_SOFTAP_LOG);
+
+    for (i = 1; i <= WIFI_SOFTAP_INIT_RETRY; i++) {
+        ret = wifi_init();
+        PRINT("%s [DIAG] wifi_init() try %d/%d ret=%d status=%d\r\n",
+              WIFI_SOFTAP_LOG, i, WIFI_SOFTAP_INIT_RETRY,
+              (int32_t)ret, wifi_is_wifi_inited());
+        if (wifi_is_wifi_inited() != 0) {
+            PRINT("%s WiFi init OK.\r\n", WIFI_SOFTAP_LOG);
+            return 1;
+        }
+        (void)osal_msleep(WIFI_SOFTAP_INIT_RETRY_MS);
+    }
+    PRINT("%s FATAL: wifi_init() failed after %d tries.\r\n",
+          WIFI_SOFTAP_LOG, WIFI_SOFTAP_INIT_RETRY);
+    PRINT("%s HINT: 1) 烧 *_all.fwpkg 2) 烧完按 RESET 3) 串口发 AT+WIFIINIT 4) 检查 NV 校准数据\r\n",
+          WIFI_SOFTAP_LOG);
+    return 0;
+}
+
 /* ---------------- 启动 SoftAP：热点优先保活，附属步骤失败一律不关热点 ---------------- */
 static errcode_t example_softap_function(void)
 {
@@ -132,7 +186,7 @@ static errcode_t example_softap_function(void)
     ip4_addr_t st_netmask = {0};
     errcode_t ret = ERRCODE_FAIL;
     int32_t dret;
-    uint8_t attempt;
+    uint32_t attempt;
 
     IP4_ADDR(&st_ipaddr, 192, 168, 63, 1);   /* 核心板 AP 地址：192.168.63.1 */
     IP4_ADDR(&st_netmask, 255, 255, 255, 0); /* 子网掩码：255.255.255.0 */
@@ -164,22 +218,29 @@ static errcode_t example_softap_function(void)
         PRINT("%s WARN: advance config failed, continue with SDK defaults.\r\n", WIFI_SOFTAP_LOG);
     }
 
-    /* 启动 SoftAP：失败重试，并把每一步返回码打到串口，便于排障 */
+    /* 启动 SoftAP：持续重试，中途若 init 状态丢失会自动重新 wifi_init() */
     for (attempt = 1; attempt <= WIFI_SOFTAP_ENABLE_RETRY; attempt++) {
-        PRINT("%s SoftAP try enable ... (attempt %u/%d, wifi_inited=%d)\r\n",
-              WIFI_SOFTAP_LOG, attempt, WIFI_SOFTAP_ENABLE_RETRY, wifi_is_wifi_inited());
+        if (wifi_is_wifi_inited() == 0) {
+            PRINT("%s [DIAG] init_status lost at attempt %u -> re-init.\r\n",
+                  WIFI_SOFTAP_LOG, attempt);
+            (void)softap_ensure_wifi_init();
+        }
         ret = wifi_softap_enable(&hapd_conf);
-        PRINT("%s [DIAG] wifi_softap_enable ret=%d\r\n", WIFI_SOFTAP_LOG, (int32_t)ret);
+        PRINT("%s [DIAG] wifi_softap_enable try %u/%d ret=%d (init_status=%d)\r\n",
+              WIFI_SOFTAP_LOG, attempt, WIFI_SOFTAP_ENABLE_RETRY,
+              (int32_t)ret, wifi_is_wifi_inited());
         if (ret == ERRCODE_SUCC) {
             break;
         }
-        (void)osal_msleep(1000);
+        if (attempt == 1 || attempt % 5 == 0) {
+            PRINT("%s HINT: ret!=0 可用串口发送 AT+WIFIINIT；本任务每 %d ms 自动重试一次\r\n",
+                  WIFI_SOFTAP_LOG, WIFI_SOFTAP_ENABLE_RETRY_MS);
+        }
+        (void)osal_msleep(WIFI_SOFTAP_ENABLE_RETRY_MS);
     }
     if (ret != ERRCODE_SUCC) {
-        PRINT("%s FATAL: softap enable FAIL after %d attempts.\r\n",
+        PRINT("%s FATAL: softap enable FAIL after %d attempts, keep retrying in monitor loop.\r\n",
               WIFI_SOFTAP_LOG, WIFI_SOFTAP_ENABLE_RETRY);
-        PRINT("%s 排查：1) 是否烧录 *_all.fwpkg（含 NV 校准数据） 2) 复位后串口是否出现 WiFi init OK\r\n",
-              WIFI_SOFTAP_LOG);
         return ERRCODE_FAIL;
     }
     PRINT("%s SoftAP enabled OK. SSID \"H\" is now broadcasting.\r\n", WIFI_SOFTAP_LOG);
@@ -228,6 +289,7 @@ static void softap_monitor_loop(void)
     wifi_sta_info_stru sta_list[WIFI_SOFTAP_MAX_STA] = {0};
     uint32_t sta_num = 0;
     uint32_t last_num = 0xFFFFFFFFU;
+    uint32_t ticks = 0;
     errcode_t ret;
     ip_addr_t phone_ip;
 
@@ -236,6 +298,18 @@ static void softap_monitor_loop(void)
 
     while (1) {
         (void)osal_msleep(WIFI_SOFTAP_POLL_MS);
+        ticks++;
+
+        /* 每 10 s 汇报一次初始化状态；状态丢失就重新初始化，保证长期可自愈 */
+        if (ticks % 5 == 0) {
+            PRINT("%s [DIAG] heartbeat: init_status=%d, netif=%s, stations=%u\r\n",
+                  WIFI_SOFTAP_LOG, wifi_is_wifi_inited(),
+                  (g_softap_netif != NULL) ? "ap0-ready" : "not-found", last_num);
+            if (wifi_is_wifi_inited() == 0) {
+                (void)softap_ensure_wifi_init();
+            }
+        }
+
         sta_num = WIFI_SOFTAP_MAX_STA;
         (void)memset_s(sta_list, sizeof(sta_list), 0, sizeof(sta_list));
         ret = wifi_softap_get_sta_list(sta_list, &sta_num);
@@ -292,40 +366,27 @@ static void softap_monitor_loop(void)
     }
 }
 
-/* 有限等待 WiFi host 初始化；绝不无限死等（死等会让 SoftAP 永远不启动） */
-static int32_t softap_wait_init(uint32_t timeout_ms)
-{
-    uint32_t waited = 0;
-    while (waited < timeout_ms) {
-        if (wifi_is_wifi_inited() != 0) {
-            return 1;
-        }
-        (void)osal_msleep(WIFI_SOFTAP_INIT_STEP_MS);
-        waited += WIFI_SOFTAP_INIT_STEP_MS;
-    }
-    return wifi_is_wifi_inited();
-}
-
 static int demo_init(const char *arg)
 {
     errcode_t ret;
 
     unused(arg);
 
-    PRINT("%s ==== WiFi AP (SoftAP) Sample Start ====\r\n", WIFI_SOFTAP_LOG);
-    PRINT("%s [DIAG] BOOT CHECK: waiting WiFi host init (max %d ms) ...\r\n",
-          WIFI_SOFTAP_LOG, WIFI_SOFTAP_INIT_WAIT_MS);
+    PRINT("%s ==== WiFi AP (SoftAP) Sample Start  BUILD=%s ====\r\n",
+          WIFI_SOFTAP_LOG, WIFI_SOFTAP_BUILD);
+    PRINT("%s [DIAG] 看不到本行 = 烧错固件 / COM 口选错 / 波特率不是 115200\r\n",
+          WIFI_SOFTAP_LOG);
+    PRINT("%s [DIAG] boot delay %d ms: wait WiFi device ready (vendor 原版做法)\r\n",
+          WIFI_SOFTAP_LOG, WIFI_SOFTAP_BOOT_DELAY_MS);
+    (void)osal_msleep(WIFI_SOFTAP_BOOT_DELAY_MS);
+    PRINT("%s [DIAG] before init: wifi_is_wifi_inited()=%d\r\n",
+          WIFI_SOFTAP_LOG, wifi_is_wifi_inited());
 
-    if (softap_wait_init(WIFI_SOFTAP_INIT_WAIT_MS) == 0) {
-        /* 本配置下没有任何启动链调用 wifi_init()，超时就自己兜底初始化一次 */
-        PRINT("%s WARN: wifi_is_wifi_inited() still 0 -> call wifi_init() fallback.\r\n",
-              WIFI_SOFTAP_LOG);
-        ret = wifi_init();
-        PRINT("%s [DIAG] wifi_init() ret=%d, status now=%d\r\n",
-              WIFI_SOFTAP_LOG, (int32_t)ret, wifi_is_wifi_inited());
-        (void)softap_wait_init(3000);
-    }
-    PRINT("%s WiFi init OK. (status=%d)\r\n", WIFI_SOFTAP_LOG, wifi_is_wifi_inited());
+    /* 关键：本 target 不会自动 wifi_init()，这里主动初始化并有限等待 */
+    (void)softap_ensure_wifi_init();
+    (void)softap_wait_init(WIFI_SOFTAP_INIT_WAIT_MS);
+    PRINT("%s [DIAG] after init: wifi_is_wifi_inited()=%d\r\n",
+          WIFI_SOFTAP_LOG, wifi_is_wifi_inited());
 
     /* 注册事件回调：手机连上/断开时立刻从串口输出。失败只告警，不阻断 SoftAP */
     ret = wifi_register_event_cb(&g_softap_event_cb);
