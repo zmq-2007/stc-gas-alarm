@@ -12,8 +12,17 @@
    打印 `[DHCP] phone MAC=... IP=192.168.63.x` 与 `LINK UP: phone -> AP(H)`。
 4. 把原来固定 `osal_msleep(5000)` 换成 `while (wifi_is_wifi_inited() == 0)` 等待，避免 WiFi 未初始化就开 AP。
 5. 串口波特率 115200（DEBUG_UART / UART0）。
+6. **排障加固（针对实测「烧录后没有生成网络」）**：取消无超时的 `while (wifi_is_wifi_inited() == 0)` 死等，
+   改为 15 s 有限等待 + 超时自动 `wifi_init()` 兜底；显式 `hidden_ssid_flag=1`（不隐藏 SSID），
+   `wifi_softap_enable()` 失败重试 3 次；事件回调 / netif / DHCP 失败只告警，不再 `wifi_softap_disable()`
+   把已起来的热点关掉；每一步都打印 `[DIAG]` 返回码，便于按串口定位。
 
-## 预期串口日志
+> **烧录后搜不到热点 H**：请烧 `wifiap/ws63-liteos-app_all.fwpkg`（含 Bootloader + App + NV 射频校准数据 + 分区表），
+> 不要只烧单个 `.bin` 或用 `load_only.fwpkg`；烧完再按一次 RESET，然后运行
+> `python wifiap_serial_monitor.py --port COMx --until-success`，脚本结束时会自动给出「串口排障结论」。
+> 完整对照表见 `预期串口日志.txt`，网页里也有「排障：热点 H 为什么没出现」板块。
+
+## 预期串口日志（精简版；加固版固件会额外打印 [DIAG] 行）
 
 ```
 [WIFIAP] ==== WiFi AP (SoftAP) Sample Start ====

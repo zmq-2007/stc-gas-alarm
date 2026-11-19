@@ -1,29 +1,48 @@
 # wifiap 串口监视日志（演示回放，非真实采集）
-[22:02:34.310] [WIFIAP] ==== WiFi AP (SoftAP) Sample Start ====
-[22:02:34.490] [WIFIAP] WiFi init OK.
-[22:02:34.671] [WIFIAP] Register event callback OK (sta_join / sta_leave).
-[22:02:34.851] [WIFIAP] SSID    : H
-[22:02:35.032] [WIFIAP] PASSWORD: 12345678
-[22:02:35.213] [WIFIAP] SECURITY: WPA/WPA2-PSK MIX, CHANNEL: 6
-[22:02:35.393] [WIFIAP] SoftAP try enable ...
-[22:02:35.574] [WIFIAP] SoftAP enabled OK.
-[22:02:35.754] [WIFIAP] netif ap0 IP=192.168.63.1 MASK=255.255.255.0 GW=192.168.63.2
-[22:02:35.936] [WIFIAP] DHCP server started OK (pool 192.168.63.x)
-[22:02:36.117] [WIFIAP] SoftAp start success.
-[22:02:36.297] [WIFIAP] >>> 请用手机 WLAN 搜索热点 "H"，输入密码 12345678 连接 <<<
-[22:02:36.479] [WIFIAP] Waiting for phone ... (poll 2000 ms)
-[22:02:36.659] [WIFIAP] Connected stations: 0
-[22:02:36.840] [WIFIAP] Connected stations: 1
-[22:02:37.020] [WIFIAP] [EVENT] STA JOIN  MAC=A8:6D:AA:3F:21:70  RSSI=-46 dBm  RATE=65000 kbps
-[22:02:37.201] [WIFIAP] ****** 手机连接热点成功 / PHONE CONNECTED HOTSPOT SUCCESS ******
+[23:20:46.815] [WIFIAP] ==== WiFi AP (SoftAP) Sample Start ====
+[23:20:46.995] [WIFIAP] [DIAG] BOOT CHECK: waiting WiFi host init (max 15000 ms) ...
+[23:20:47.176] [WIFIAP] WiFi init OK. (status=1)
+[23:20:47.357] [WIFIAP] [DIAG] register_event_cb ret=0
+[23:20:47.538] [WIFIAP] Register event callback OK (sta_join / sta_leave).
+[23:20:47.718] [WIFIAP] SSID    : H
+[23:20:47.900] [WIFIAP] PASSWORD: 12345678
+[23:20:48.081] [WIFIAP] SECURITY: WPA/WPA2-PSK MIX, CHANNEL: 6
+[23:20:48.262] [WIFIAP] [DIAG] set_softap_config_advance ret=0 (hidden_ssid_flag=1)
+[23:20:48.443] [WIFIAP] SoftAP try enable ... (attempt 1/3, wifi_inited=1)
+[23:20:48.623] [WIFIAP] [DIAG] wifi_softap_enable ret=0
+[23:20:48.807] [WIFIAP] SoftAP enabled OK. SSID "H" is now broadcasting.
+[23:20:48.988] [WIFIAP] [DIAG] netif_set_addr ret=0
+[23:20:49.168] [WIFIAP] [DIAG] dhcps_start ret=0
+[23:20:49.348] [WIFIAP] DHCP server started OK (pool 192.168.63.x)
+[23:20:49.529] [WIFIAP] netif IP=192.168.63.1 MASK=255.255.255.0 GW=192.168.63.2
+[23:20:49.709] [WIFIAP] SoftAp start success.
+[23:20:49.889] [WIFIAP] >>> 请用手机 WLAN 搜索热点 "H"，输入密码 12345678 连接 <<<
+[23:20:50.070] [WIFIAP] Waiting for phone ... (poll 2000 ms)
+[23:20:50.251] [WIFIAP] Connected stations: 0
+[23:20:50.431] [WIFIAP] Connected stations: 1
+[23:20:50.612] [WIFIAP] [EVENT] STA JOIN  MAC=A8:6D:AA:3F:21:70  RSSI=-46 dBm  RATE=65000 kbps
+[23:20:50.792] [WIFIAP] ****** 手机连接热点成功 / PHONE CONNECTED HOTSPOT SUCCESS ******
 ====================================================================
   验收通过：手机连接热点成功
 ====================================================================
-[22:02:37.381] [WIFIAP] SSID=H  PASSWORD=12345678  AP_IP=192.168.63.1
-[22:02:37.562] [WIFIAP] [DHCP] phone MAC=A8:6D:AA:3F:21:70  IP=192.168.63.3
-[22:02:37.742] [WIFIAP] LINK UP: phone -> AP(H)  AP=192.168.63.1  phone=192.168.63.3
-[22:02:37.923] [WIFIAP] ---------------- RESULT / 实训验收 ----------------
-[22:02:38.103] [WIFIAP] SSID=H  PASSWORD=12345678  CHANNEL=6  SECURITY=WPA/WPA2-PSK
-[22:02:38.284] [WIFIAP] AP=192.168.63.1  phone MAC=A8:6D:AA:3F:21:70  IP=192.168.63.3
-[22:02:38.464] [WIFIAP] ****** 手机连接热点成功 / PHONE CONNECTED HOTSPOT SUCCESS ******
-[22:02:38.645] [WIFIAP] ---------------- RESULT END ----------------
+[23:20:50.973] [WIFIAP] SSID=H  PASSWORD=12345678  AP_IP=192.168.63.1
+[23:20:51.154] [WIFIAP] [DHCP] phone MAC=A8:6D:AA:3F:21:70  IP=192.168.63.3
+[23:20:51.334] [WIFIAP] LINK UP: phone -> AP(H)  AP=192.168.63.1  phone=192.168.63.3
+[23:20:51.514] [WIFIAP] ---------------- RESULT / 实训验收 ----------------
+[23:20:51.695] [WIFIAP] SSID=H  PASSWORD=12345678  CHANNEL=6  SECURITY=WPA/WPA2-PSK
+[23:20:51.875] [WIFIAP] AP=192.168.63.1  phone MAC=A8:6D:AA:3F:21:70  IP=192.168.63.3
+[23:20:52.056] [WIFIAP] ****** 手机连接热点成功 / PHONE CONNECTED HOTSPOT SUCCESS ******
+[23:20:52.236] [WIFIAP] ---------------- RESULT END ----------------
+
+========================================================================
+串口排障结论（根据本次收到的日志自动判定）
+------------------------------------------------------------------------
+  [OK] 固件已启动
+  [OK] WiFi host 已初始化
+  [OK] SoftAP 使能成功
+  [OK] SSID「H」已开始广播
+  [OK] 热点可用（含 DHCP 或降级保活）
+  [OK] 手机连接成功
+------------------------------------------------------------------------
+  结论：验收通过，串口已收到「手机连接热点成功」。
+========================================================================

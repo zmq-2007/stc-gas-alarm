@@ -26,6 +26,12 @@
  *    -> STA JOIN -> 分配 IP -> 手机连接热点成功。
  * 5) 手机拿到 DHCP 地址后再集中打印一次「RESULT / 实训验收」摘要，把热点参数、
  *    手机 MAC / IP 与「手机连接热点成功」汇总在同一段串口输出里，方便验收核对。
+ * 6) 排障加固（烧录后搜不到热点的情况）：
+ *    - 取消「无限等待 wifi_is_wifi_inited()」，改为 15 s 有限等待 + 显式 wifi_init() 兜底，
+ *      避免 WiFi host 未置位时任务永远卡死、SoftAP 永不启动（vendor 原版是固定 5 s 延时）。
+ *    - 事件回调注册 / 高级配置 / DHCP 配置失败只告警，不再 return 或 wifi_softap_disable()，
+ *      保证「热点先起来」优先；每步都把返回码打印到串口，便于定位。
+ *    - 显式设置 hidden_ssid_flag=1（不隐藏 SSID），并对 wifi_softap_enable() 做 3 次重试。
  * ---------------------------------------------------------------------------
  */
 
@@ -46,6 +52,9 @@
 #define WIFI_SOFTAP_MAX_STA         6       /* 与 at_wifi.h 的 WIFI_MAX_NUM_USER 一致 */
 #define WIFI_SOFTAP_POLL_MS         2000    /* 每 2 s 查询一次在线站点 */
 #define WIFI_SOFTAP_LOG             "[WIFIAP]"
+#define WIFI_SOFTAP_INIT_WAIT_MS    15000   /* 最长等待 WiFi host 初始化 15 s，绝不无限等 */
+#define WIFI_SOFTAP_INIT_STEP_MS    100
+#define WIFI_SOFTAP_ENABLE_RETRY    3       /* softap_enable 失败重试次数 */
 
 /* 任务书要求的固定热点参数 */
 #define WIFI_SOFTAP_SSID            "H"
@@ -110,18 +119,21 @@ static wifi_event_stru g_softap_event_cb = {
     .wifi_event_softap_sta_leave     = softap_sta_leave_cb,
 };
 
-/* ---------------- 启动 SoftAP + DHCP ---------------- */
+/* ---------------- 启动 SoftAP：热点优先保活，附属步骤失败一律不关热点 ---------------- */
 static errcode_t example_softap_function(void)
 {
     /* SoftAp SSID / 密码：严格按任务书 "H" / "12345678" */
     char ssid[WIFI_MAX_SSID_LEN] = WIFI_SOFTAP_SSID;
     char pre_shared_key[WIFI_MAX_KEY_LEN] = WIFI_SOFTAP_PASSWORD;
     softap_config_stru hapd_conf = {0};
-
-    char ifname[WIFI_IFNAME_MAX_SIZE] = "ap0"; /* SDK 默认 SoftAP 网络设备名 */
+    softap_config_advance_stru adv_conf = {0};
     ip4_addr_t st_gw = {0};
     ip4_addr_t st_ipaddr = {0};
     ip4_addr_t st_netmask = {0};
+    errcode_t ret = ERRCODE_FAIL;
+    int32_t dret;
+    uint8_t attempt;
+
     IP4_ADDR(&st_ipaddr, 192, 168, 63, 1);   /* 核心板 AP 地址：192.168.63.1 */
     IP4_ADDR(&st_netmask, 255, 255, 255, 0); /* 子网掩码：255.255.255.0 */
     IP4_ADDR(&st_gw, 192, 168, 63, 2);       /* 网关：192.168.63.2 */
@@ -138,34 +150,72 @@ static errcode_t example_softap_function(void)
     hapd_conf.security_type = WIFI_SEC_TYPE_WPA2_WPA_PSK_MIX; /* WPA/WPA2 混合 */
     hapd_conf.channel_num = WIFI_SOFTAP_CHANNEL;               /* 6 信道 */
 
-    PRINT("%s SoftAP try enable ...\r\n", WIFI_SOFTAP_LOG);
-    if (wifi_softap_enable(&hapd_conf) != ERRCODE_SUCC) {
-        PRINT("%s softap enable FAIL.\r\n", WIFI_SOFTAP_LOG);
+    /* 显式声明「不隐藏 SSID」+ 2.4G 11b/g/n，避免手机 WLAN 里搜不到 H */
+    adv_conf.beacon_interval = 100;
+    adv_conf.dtim_period = 2;
+    adv_conf.group_rekey = 86400;
+    adv_conf.hidden_ssid_flag = 1;              /* 1 = 不隐藏，2 = 隐藏 */
+    adv_conf.gi = 0;
+    adv_conf.protocol_mode = WIFI_MODE_11B_G_N;
+    ret = wifi_set_softap_config_advance(&adv_conf);
+    PRINT("%s [DIAG] set_softap_config_advance ret=%d (hidden_ssid_flag=1)\r\n",
+          WIFI_SOFTAP_LOG, (int32_t)ret);
+    if (ret != ERRCODE_SUCC) {
+        PRINT("%s WARN: advance config failed, continue with SDK defaults.\r\n", WIFI_SOFTAP_LOG);
+    }
+
+    /* 启动 SoftAP：失败重试，并把每一步返回码打到串口，便于排障 */
+    for (attempt = 1; attempt <= WIFI_SOFTAP_ENABLE_RETRY; attempt++) {
+        PRINT("%s SoftAP try enable ... (attempt %u/%d, wifi_inited=%d)\r\n",
+              WIFI_SOFTAP_LOG, attempt, WIFI_SOFTAP_ENABLE_RETRY, wifi_is_wifi_inited());
+        ret = wifi_softap_enable(&hapd_conf);
+        PRINT("%s [DIAG] wifi_softap_enable ret=%d\r\n", WIFI_SOFTAP_LOG, (int32_t)ret);
+        if (ret == ERRCODE_SUCC) {
+            break;
+        }
+        (void)osal_msleep(1000);
+    }
+    if (ret != ERRCODE_SUCC) {
+        PRINT("%s FATAL: softap enable FAIL after %d attempts.\r\n",
+              WIFI_SOFTAP_LOG, WIFI_SOFTAP_ENABLE_RETRY);
+        PRINT("%s 排查：1) 是否烧录 *_all.fwpkg（含 NV 校准数据） 2) 复位后串口是否出现 WiFi init OK\r\n",
+              WIFI_SOFTAP_LOG);
         return ERRCODE_FAIL;
     }
-    PRINT("%s SoftAP enabled OK.\r\n", WIFI_SOFTAP_LOG);
+    PRINT("%s SoftAP enabled OK. SSID \"H\" is now broadcasting.\r\n", WIFI_SOFTAP_LOG);
 
-    /* 配置 DHCP 服务器，手机连上后会自动获得 192.168.63.x */
-    g_softap_netif = netif_find(ifname);
+    /* DHCP 只负责给手机分配 IP，失败不能把已经起来的热点关掉 */
+    g_softap_netif = netif_find("ap0");
     if (g_softap_netif == NULL) {
-        PRINT("%s find netif ap0 FAIL.\r\n", WIFI_SOFTAP_LOG);
-        (void)wifi_softap_disable();
-        return ERRCODE_FAIL;
+        g_softap_netif = netif_find("ap1");
     }
-    if (netifapi_netif_set_addr(g_softap_netif, &st_ipaddr, &st_netmask, &st_gw) != ERR_OK) {
-        PRINT("%s set addr() FAIL.\r\n", WIFI_SOFTAP_LOG);
-        (void)wifi_softap_disable();
-        return ERRCODE_FAIL;
+    if (g_softap_netif == NULL) {
+        g_softap_netif = netif_find("wlan0");
     }
-    if (netifapi_dhcps_start(g_softap_netif, NULL, 0) != ERR_OK) {
-        PRINT("%s dhcps start() FAIL.\r\n", WIFI_SOFTAP_LOG);
-        (void)wifi_softap_disable();
-        return ERRCODE_FAIL;
+    if (g_softap_netif == NULL) {
+        PRINT("%s WARN: netif ap0/ap1/wlan0 not found -> keep hotspot ON (IP 分配可能不可用)\r\n",
+              WIFI_SOFTAP_LOG);
+        PRINT("%s SoftAp start success.\r\n", WIFI_SOFTAP_LOG);
+        PRINT("%s >>> 请用手机 WLAN 搜索热点 \"H\"，输入密码 12345678 连接 <<<\r\n",
+              WIFI_SOFTAP_LOG);
+        return ERRCODE_SUCC;
     }
 
-    PRINT("%s netif ap0 IP=192.168.63.1 MASK=255.255.255.0 GW=192.168.63.2\r\n",
-          WIFI_SOFTAP_LOG);
-    PRINT("%s DHCP server started OK (pool 192.168.63.x)\r\n", WIFI_SOFTAP_LOG);
+    dret = (int32_t)netifapi_netif_set_addr(g_softap_netif, &st_ipaddr, &st_netmask, &st_gw);
+    PRINT("%s [DIAG] netif_set_addr ret=%d\r\n", WIFI_SOFTAP_LOG, dret);
+    if (dret != ERR_OK) {
+        PRINT("%s WARN: set_addr failed, keep hotspot ON.\r\n", WIFI_SOFTAP_LOG);
+    }
+    dret = (int32_t)netifapi_dhcps_start(g_softap_netif, NULL, 0);
+    PRINT("%s [DIAG] dhcps_start ret=%d\r\n", WIFI_SOFTAP_LOG, dret);
+    if (dret != ERR_OK) {
+        PRINT("%s WARN: DHCP server failed, keep hotspot ON (手机可能拿不到 IP).\r\n",
+              WIFI_SOFTAP_LOG);
+    } else {
+        PRINT("%s DHCP server started OK (pool 192.168.63.x)\r\n", WIFI_SOFTAP_LOG);
+    }
+
+    PRINT("%s netif IP=192.168.63.1 MASK=255.255.255.0 GW=192.168.63.2\r\n", WIFI_SOFTAP_LOG);
     PRINT("%s SoftAp start success.\r\n", WIFI_SOFTAP_LOG);
     PRINT("%s >>> 请用手机 WLAN 搜索热点 \"H\"，输入密码 12345678 连接 <<<\r\n",
           WIFI_SOFTAP_LOG);
@@ -213,8 +263,8 @@ static void softap_monitor_loop(void)
                   WIFI_SOFTAP_LOG);
         }
 
-        /* DHCP 握手需要一点时间，拿到租约后打印手机获得的 IP */
-        if (g_phone_ip_printed == 0) {
+        /* DHCP 握手需要一点时间，拿到租约后打印手机获得的 IP（netif 未就绪时跳过，避免空指针） */
+        if (g_phone_ip_printed == 0 && g_softap_netif != NULL) {
             (void)memset_s(&phone_ip, sizeof(phone_ip), 0, sizeof(phone_ip));
             if (netifapi_dhcps_get_client_ip(g_softap_netif, g_phone_mac,
                                              WIFI_MAC_LEN, &phone_ip) == ERR_OK &&
@@ -242,27 +292,55 @@ static void softap_monitor_loop(void)
     }
 }
 
+/* 有限等待 WiFi host 初始化；绝不无限死等（死等会让 SoftAP 永远不启动） */
+static int32_t softap_wait_init(uint32_t timeout_ms)
+{
+    uint32_t waited = 0;
+    while (waited < timeout_ms) {
+        if (wifi_is_wifi_inited() != 0) {
+            return 1;
+        }
+        (void)osal_msleep(WIFI_SOFTAP_INIT_STEP_MS);
+        waited += WIFI_SOFTAP_INIT_STEP_MS;
+    }
+    return wifi_is_wifi_inited();
+}
+
 static int demo_init(const char *arg)
 {
+    errcode_t ret;
+
     unused(arg);
 
     PRINT("%s ==== WiFi AP (SoftAP) Sample Start ====\r\n", WIFI_SOFTAP_LOG);
-    /* 等待 WiFi 初始化完成（比原来的固定 5 s 延时更可靠） */
-    while (wifi_is_wifi_inited() == 0) {
-        (void)osal_msleep(100);
-    }
-    PRINT("%s WiFi init OK.\r\n", WIFI_SOFTAP_LOG);
+    PRINT("%s [DIAG] BOOT CHECK: waiting WiFi host init (max %d ms) ...\r\n",
+          WIFI_SOFTAP_LOG, WIFI_SOFTAP_INIT_WAIT_MS);
 
-    /* 注册事件回调：手机连上/断开时立刻从串口输出 */
-    if (wifi_register_event_cb(&g_softap_event_cb) != ERRCODE_SUCC) {
-        PRINT("%s register event cb FAIL.\r\n", WIFI_SOFTAP_LOG);
-        return -1;
+    if (softap_wait_init(WIFI_SOFTAP_INIT_WAIT_MS) == 0) {
+        /* 本配置下没有任何启动链调用 wifi_init()，超时就自己兜底初始化一次 */
+        PRINT("%s WARN: wifi_is_wifi_inited() still 0 -> call wifi_init() fallback.\r\n",
+              WIFI_SOFTAP_LOG);
+        ret = wifi_init();
+        PRINT("%s [DIAG] wifi_init() ret=%d, status now=%d\r\n",
+              WIFI_SOFTAP_LOG, (int32_t)ret, wifi_is_wifi_inited());
+        (void)softap_wait_init(3000);
     }
-    PRINT("%s Register event callback OK (sta_join / sta_leave).\r\n", WIFI_SOFTAP_LOG);
+    PRINT("%s WiFi init OK. (status=%d)\r\n", WIFI_SOFTAP_LOG, wifi_is_wifi_inited());
 
-    /* 开启 SoftAP 与 DHCP 服务 */
+    /* 注册事件回调：手机连上/断开时立刻从串口输出。失败只告警，不阻断 SoftAP */
+    ret = wifi_register_event_cb(&g_softap_event_cb);
+    PRINT("%s [DIAG] register_event_cb ret=%d\r\n", WIFI_SOFTAP_LOG, (int32_t)ret);
+    if (ret != ERRCODE_SUCC) {
+        PRINT("%s WARN: register event cb failed, polling loop still reports success.\r\n",
+              WIFI_SOFTAP_LOG);
+    } else {
+        PRINT("%s Register event callback OK (sta_join / sta_leave).\r\n", WIFI_SOFTAP_LOG);
+    }
+
+    /* 开启 SoftAP 与 DHCP 服务；即便有附属步骤失败，也继续轮询站点 */
     if (example_softap_function() != ERRCODE_SUCC) {
-        return -1;
+        PRINT("%s [DIAG] SoftAP start had errors, keep monitoring stations anyway.\r\n",
+              WIFI_SOFTAP_LOG);
     }
 
     softap_monitor_loop();
