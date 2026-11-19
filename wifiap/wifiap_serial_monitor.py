@@ -335,6 +335,9 @@ def run_verify():
         "手机连接热点成功" in demo_log and "RESULT END" in demo_log)
     html = read_text(os.path.join(here, "..", "index.html"))
     chk("网页：结果区与串口成功标志", "wifiResult" in html and "PHONE CONNECTED HOTSPOT SUCCESS" in html)
+    chk("网页：手动添加网络三项选择（安全性 / 隐私 / 隐藏的网络）",
+        "wifiManualForm" in html and "WPA/WPA2-Personal" in html
+        and "使用设备 MAC" in html and "hidden_ssid_flag=1" in html)
 
     print("=" * 72)
     print("wifiap 实训 · 一键静态验收（不替代真实烧录、RESET 与手机 WLAN 连接）")
