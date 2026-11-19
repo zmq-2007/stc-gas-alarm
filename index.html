@@ -477,7 +477,7 @@ details.ana pre{margin:0 0 10px}
             <div class="m"><small>核心板热点 SSID / 密码</small><b>H / 12345678</b></div>
             <div class="m"><small>AP 地址 / 信道 / 加密</small><b>192.168.63.1 · CH6 · WPA2-PSK</b></div>
             <div class="m"><small>手机 MAC / DHCP 分配到 IP</small><b>A8:6D:AA:3F:21:70 · 192.168.63.3</b></div>
-            <div class="m"><small>真实编译 / 固件产物</small><b>55.89s · packet success! · 1 301 120 B</b></div>
+            <div class="m"><small>真实编译 / 固件产物</small><b>33.24s · packet success! · 1 302 336 B</b></div>
           </div>
           <div class="serialbox rlog" id="wifiResultLog">
             <div class="cmd" data-ri="0">[WIFIAP] ==== WiFi AP (SoftAP) Sample Start ====</div>
@@ -518,11 +518,56 @@ details.ana pre{margin:0 0 10px}
             <span class="hint" style="color:var(--ink3);font-size:12px">下方 11 步是可重新演练的完整流程；上方是本次实训的结论。</span>
           </div>
           <div class="rnote">
-            说明：以上逐行对应改造后 <code>softap_sample.c</code> 里 <code>PRINT</code> 语句的输出格式，MAC / IP / RSSI 随实际手机变化；其中 <code>RESULT / 实训验收</code> 段是手机拿到 DHCP 地址后由固件集中打印的汇总信息。本机未实际烧录采集，属预期核对样本。<br>
-            真实串口采集：<code>python wifiap_serial_monitor.py --port COM7 --baud 115200 --until-success</code>（115200 / 8N1，自动识别「手机连接热点成功」与 RESULT END 并另存 .log）。<br>
-            固件：本机已用 HiSpark Studio 工具链真实编译两次（首次全量 380.43 s，本次增量 <code>55.89 s · packet success!</code>），<code>ws63-liteos-app.bin 1 301 120 B</code> · 7 个镜像在 <code>wifiap_lab/firmware/</code>。<br>
-            烧录：出现 <code>Connecting, please reset device...</code> 时需人工按一下开发板右侧 RESET（脚本无法代按）；随后手机 WLAN 连接 <code>H / 12345678</code>，串口即出现上面的成功信息。
+            说明：以上是标准验收输出（逐行对应 <code>softap_sample.c</code> 的 <code>PRINT</code>）；排障加固版固件还会额外打印 <code>[DIAG]</code> 行，MAC / IP / RSSI 随实际手机变化。其中 <code>RESULT / 实训验收</code> 段是手机拿到 DHCP 地址后由固件集中打印的汇总信息。本机未实际烧录采集，属预期核对样本。<br>
+            真实串口采集：<code>python wifiap_serial_monitor.py --port COM7 --baud 115200 --until-success</code>（115200 / 8N1，自动识别成功标志、另存 .log，并在结束时给出「串口排障结论」）。<br>
+            固件：本机用 HiSpark Studio 工具链真实重编译（<code>33.24 s · packet success! · [3/18] wifiap/softap_sample.c.obj</code>），<code>ws63-liteos-app.bin 1 302 336 B</code>，完整烧录包 <code>ws63-liteos-app_all.fwpkg 1 467 560 B</code>。<br>
+            烧录：请用 <code>wifiap_lab/firmware/ws63-liteos-app_all.fwpkg</code>（含 NV 射频校准数据），出现 <code>Connecting, please reset device...</code> 时人工按 RESET，烧完再按一次 RESET；随后手机 WLAN 连接 <code>H / 12345678</code>。
           </div>
+        </div>
+      </div>
+
+      <!-- 实测反馈「烧录之后没有生成网络」：排障结论与修复 -->
+      <div class="card" id="wifiDebug" style="margin:16px 0">
+        <div class="stephead">
+          <div class="crumb">实测反馈 · 烧录之后没有生成网络 / 手机搜不到热点</div>
+          <h2>排障：热点「H」为什么没出现 <span class="pill" style="margin-left:10px">已修复并重编译</span></h2>
+          <p>先查固件：当前 <code class="inl">ws63-liteos-app.bin</code> 里确实含有 <code class="inl">[WIFIAP]</code>、<code class="inl">WiFiSoftAPTask</code>、<code class="inl">12345678</code> 和 RESULT 段，<code class="inl">CONFIG_SAMPLE_SUPPORT_WIFIAP</code> 也仍然启用 —— <b>样例没有被裁掉</b>。问题集中在「启动任务被卡住 / 热点被自己关掉 / 烧录包不含 NV」。</p>
+        </div>
+        <div class="box">
+          <div class="kv"><span>原因 1 · 无限死等</span><b>旧版 while (wifi_is_wifi_inited() == 0) 没有超时</b></div>
+          <div class="kv"><span>原因 2 · 附属失败即关热点</span><b>netif / DHCP 一失败就 wifi_softap_disable()</b></div>
+          <div class="kv"><span>原因 3 · 没有明确 SSID 广播配置</span><b>未显式设置 hidden_ssid_flag=1，enable 也无重试</b></div>
+          <div class="kv"><span>原因 4 · 烧录包不对</span><b>只烧单个 .bin 或 load_only.fwpkg，缺 NV 射频校准数据</b></div>
+        </div>
+        <div class="notecard">
+          关键依据：本工程 <code>ws63_liteos_app.config</code> 中 <code># CONFIG_ENABLE_WIFI_SAMPLE is not set</code>，
+          系统启动链里没有任何地方调用 <code>wifi_init()</code>（只有 AT 命令 <code>AT+WIFIINIT</code> 与 PM 复位会调）。
+          因此 <code>wifi_is_wifi_inited()</code> 一旦迟迟不置 1，旧版任务就永远卡在第一行日志之后，SoftAP 根本不会被开启。
+          <b>vendor 实验指导原版用的是固定 5 s 延时，不存在这个死等</b>，这是上一轮改造引入的回归。
+        </div>
+        <div class="box" style="margin-top:12px">
+          <div class="kv"><span>修复 1</span><b>15 s 有限等待，超时自动调用 wifi_init() 兜底</b></div>
+          <div class="kv"><span>修复 2</span><b>显式 hidden_ssid_flag=1（不隐藏）+ enable 失败重试 3 次</b></div>
+          <div class="kv"><span>修复 3</span><b>netif / DHCP 失败只告警，保持热点开启</b></div>
+          <div class="kv"><span>修复 4</span><b>每步打印 [DIAG] 返回码，回调注册失败不再阻断</b></div>
+          <div class="kv"><span>新固件</span><b>33.24 s · packet success! · bin 1 302 336 B · all.fwpkg 1 467 560 B</b></div>
+        </div>
+        <div class="notecard">
+          <b>按串口最后停在哪一行定位（脚本结束会自动给出同样结论）：</b>
+          <ol style="margin:8px 0 0 20px;line-height:1.9">
+            <li>完全没有 [WIFIAP] 行 → 固件没跑：烧错包 / 烧完没再按 RESET / 串口选错或波特率不对 / IDE 重新 Kconfig 后取消勾选样例没重编译。</li>
+            <li>只有 Start 与 BOOT CHECK → WiFi host 未就绪：改烧 <code>*_all.fwpkg</code>（含 <code>ws63_all_nv.bin</code>），重新上电。</li>
+            <li>有 WiFi init OK 但 <code>wifi_softap_enable ret</code> 非 0 或出现 FATAL → WiFi device 侧 / NV 校准异常：重烧 all.fwpkg，必要时 rebuild。</li>
+            <li>有 <code>SSID "H" is now broadcasting</code> 但手机看不到 → 手机侧手动「添加网络」H / 12345678 / WPA2-PSK，只搜 2.4 GHz，在列表底部找被折叠的「无互联网」热点，关掉 WLAN+ 智能切换。</li>
+            <li>有 SoftAp start success 但没有 STA JOIN → 密码或加密方式不匹配，或手机自动切回移动数据（先关移动数据再连）。</li>
+          </ol>
+        </div>
+        <div class="notecard">
+          <b>请重新烧录：</b><code>wifiap_lab/firmware/ws63-liteos-app_all.fwpkg</code>（或 SDK 的
+          <code>output/ws63/fwpkg/ws63-liteos-app/ws63-liteos-app_all.fwpkg</code>）。
+          该包才包含 Bootloader + App + NV 校准数据 + 分区表；<b>不要</b>只烧单个 <code>ws63-liteos-app.bin</code>，也不要用 <code>load_only.fwpkg</code> 代替。
+          烧录完成按 RESET 后运行 <code>python wifiap_serial_monitor.py --port COMx --until-success</code>，
+          脚本会把卡点结论写进 <code>wifiap_serial_*.log</code>。若仍搜不到，把该日志前 30 行发来即可定位。
         </div>
       </div>
       <div class="wifilayout">
