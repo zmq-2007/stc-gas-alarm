@@ -10,12 +10,32 @@
    手机一连上就打印 MAC、RSSI、速率以及 `手机连接热点成功 / PHONE CONNECTED HOTSPOT SUCCESS`；断开时打印 `PHONE DISCONNECTED`。
 3. 用 `wifi_softap_get_sta_list()` 每 2 s 轮询在线站点，用 `netifapi_dhcps_get_client_ip()` 查询 DHCP 分配给手机的 IP，
    打印 `[DHCP] phone MAC=... IP=192.168.63.x` 与 `LINK UP: phone -> AP(H)`。
-4. 把原来固定 `osal_msleep(5000)` 换成 `while (wifi_is_wifi_inited() == 0)` 等待，避免 WiFi 未初始化就开 AP。
+4. 等待 WiFi 就绪改为 **15 s 有限等待 + 超时自动 `wifi_init()` 兜底**（早前版本曾改成无超时的
+   `while (wifi_is_wifi_inited() == 0)`，实测会卡死，已废弃，详见下方排障加固）。
 5. 串口波特率 115200（DEBUG_UART / UART0）。
 6. **排障加固（针对实测「烧录后没有生成网络」）**：取消无超时的 `while (wifi_is_wifi_inited() == 0)` 死等，
    改为 15 s 有限等待 + 超时自动 `wifi_init()` 兜底；显式 `hidden_ssid_flag=1`（不隐藏 SSID），
    `wifi_softap_enable()` 失败重试 3 次；事件回调 / netif / DHCP 失败只告警，不再 `wifi_softap_disable()`
    把已起来的热点关掉；每一步都打印 `[DIAG]` 返回码，便于按串口定位。
+
+## 手机「手动添加网络」怎么选（安全性 / 隐私 / 隐藏的网络）
+
+| 字段 | 应选 | 依据与说明 |
+| --- | --- | --- |
+| 网络名称 SSID | `H` | 单个大写字母，区分大小写，不要带空格或引号 |
+| 密码 | `12345678` | 8 位纯数字，对应 `WIFI_SOFTAP_PASSWORD` |
+| **安全性** | **WPA/WPA2-Personal**（WPA2-PSK / WPA/WPA2-PSK） | 固件 `hapd_conf.security_type = WIFI_SEC_TYPE_WPA2_WPA_PSK_MIX`；**不要选** WPA3/SAE、开放(无)、企业级 EAP |
+| **隐私** | **使用设备 MAC** | 固件不限制 MAC，随机 MAC 也能连；但设备 MAC 便于与串口 `STA JOIN MAC=` 对照，且规避个别手机在 WPA/WPA2 混合下反复认证失败 |
+| **隐藏的网络** | **否 / 不勾选** | 固件 `hidden_ssid_flag = 1`，服务层转成 `conf.ssid_hidden = 0`，即 SSID 正常广播；勾「是」反而连不上 |
+| IP 设置 / 代理 | DHCP（动态） / 无 | 固件运行 `netifapi_dhcps_start()`，手机自动获得 `192.168.63.x`，网关 `192.168.63.1` |
+| 频段 / 信道 | 2.4 GHz / CH6 | 核心板只有 2.4 GHz；关掉 5 GHz 优先与 WLAN+ 智能切换 |
+| 弹出「无互联网，是否保持连接」 | **保持连接 / 仍然连接** | 板卡只有 AP + DHCP，没有外网出口，这是正常现象；建议先临时关闭移动数据，否则手机会自动切回蜂窝网络 |
+
+连上后的判据：手机 WLAN 详情显示「已连接」且 IP 形如 `192.168.63.3`；串口依次出现
+`[EVENT] STA JOIN` → `手机连接热点成功 / PHONE CONNECTED HOTSPOT SUCCESS` → `[DHCP] ... IP=192.168.63.3` → `RESULT / 实训验收`。
+
+若一直停在「正在获取 IP 地址」或反复断开：长按热点「忘记网络」后按上表重填；确认串口已有
+`SSID "H" is now broadcasting` 与 `SoftAp start success.`（没有则是板卡侧问题）；关闭移动数据；换另一台手机交叉验证。
 
 > **烧录后搜不到热点 H**：请烧 `wifiap/ws63-liteos-app_all.fwpkg`（含 Bootloader + App + NV 射频校准数据 + 分区表），
 > 不要只烧单个 `.bin` 或用 `load_only.fwpkg`；烧完再按一次 RESET，然后运行
