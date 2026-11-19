@@ -277,7 +277,26 @@ details.ana pre{margin:0 0 10px}
 .rbtns{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-top:12px}
 .rnote{margin-top:11px;font-size:11.5px;line-height:1.85;color:#4a6b59;background:#f6fbf8;border:1px dashed #cfe6d8;border-radius:9px;padding:10px 12px}
 .rnote code{font-family:var(--mono);color:#0b6b3c}
+/* 手机「手动添加网络」逐项填写 */
+.mform{margin:0 0 16px;border:1px solid #cbdcf5;border-radius:12px;background:linear-gradient(180deg,#f5f9ff,#fff);overflow:hidden}
+.mform .mhead{padding:14px 18px;border-bottom:1px solid #d9e6f8;background:#eaf2ff}
+.mform .mhead h3{margin:0;font-size:15px;color:#164a9c}
+.mform .mhead small{display:block;margin-top:4px;color:#4a6a9c;font-size:11.5px}
+.mform .mbody{padding:14px 18px 18px}
+.mq{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 13px}
+.mq>div{flex:1 1 205px;background:#fff;border:1px solid #d9e6f8;border-left:3px solid #0f9d58;border-radius:9px;padding:10px 12px;font-size:12px;line-height:1.75;color:#3b5480}
+.mq b{display:block;color:#164a9c;font-size:12.5px;margin-bottom:3px}
+.mq em{font-style:normal;color:#0b6b3c;font-weight:700}
+.mrow{display:grid;grid-template-columns:150px 1fr 1.4fr;gap:0;border:1px solid #dde7f6;border-radius:9px;overflow:hidden;margin-bottom:8px;background:#fff}
+.mrow>div{padding:9px 12px;font-size:12px;line-height:1.7}
+.mrow .mf{background:#f7faff;color:#3b5480;font-weight:700;border-right:1px solid #e6edf9}
+.mrow .mv{font-family:var(--mono);color:#0b6b3c;font-weight:700;border-right:1px solid #e6edf9;word-break:break-all;background:#f4fbf7}
+.mrow .mr{color:#4b5d78}
+.mno{display:inline-block;background:#fff0f0;color:#b42318;border-radius:6px;padding:0 6px;font-size:11px;font-weight:700}
+.mtip{font-size:11.5px;line-height:1.85;color:#4a6288;background:#f6f9ff;border:1px dashed #cfdcf3;border-radius:9px;padding:10px 12px;margin-top:10px}
+.mtip code{font-family:var(--mono);color:#164a9c}
 @media(max-width:1080px){.rgrid{grid-template-columns:1fr 1fr}}
+@media(max-width:820px){.mrow{grid-template-columns:1fr}.mrow>div{border-right:0;border-bottom:1px solid #e6edf9}}
 </style>
 </head>
 <body>
@@ -522,6 +541,36 @@ details.ana pre{margin:0 0 10px}
             真实串口采集：<code>python wifiap_serial_monitor.py --port COM7 --baud 115200 --until-success</code>（115200 / 8N1，自动识别成功标志、另存 .log，并在结束时给出「串口排障结论」）。<br>
             固件：本机用 HiSpark Studio 工具链真实重编译（<code>33.24 s · packet success! · [3/18] wifiap/softap_sample.c.obj</code>），<code>ws63-liteos-app.bin 1 302 336 B</code>，完整烧录包 <code>ws63-liteos-app_all.fwpkg 1 467 560 B</code>。<br>
             烧录：请用 <code>wifiap_lab/firmware/ws63-liteos-app_all.fwpkg</code>（含 NV 射频校准数据），出现 <code>Connecting, please reset device...</code> 时人工按 RESET，烧完再按一次 RESET；随后手机 WLAN 连接 <code>H / 12345678</code>。
+          </div>
+        </div>
+      </div>
+
+      <!-- 手机侧：手动「添加网络」逐项填写指引 -->
+      <div class="mform" id="wifiManualForm">
+        <div class="mhead">
+          <h3>手机「手动添加网络」逐项怎么填（安全性 / 隐私 / 隐藏的网络）</h3>
+          <small>依据固件实际配置：WPA/WPA2-PSK 混合加密 · SSID 广播不隐藏 · 仅 2.4 GHz CH6 · 只有 AP + DHCP 无外网出口</small>
+        </div>
+        <div class="mbody">
+          <div class="mq">
+            <div><b>安全性怎么选</b>选 <em>WPA/WPA2-Personal</em>（有的手机写作 WPA2-PSK / WPA/WPA2-PSK）。固件用的是 <code>WIFI_SEC_TYPE_WPA2_WPA_PSK_MIX</code>。<span class="mno">别选 WPA3 / SAE</span><span class="mno">别选无</span></div>
+            <div><b>隐私怎么选</b>选 <em>使用设备 MAC</em>。固件不限制 MAC，随机 MAC 也能连，但设备 MAC 便于和串口打印的 MAC 对照，且避免个别手机在 WPA/WPA2 混合下反复认证失败。</div>
+            <div><b>隐藏的网络怎么选</b>选 <em>否 / 不勾选</em>。固件 <code>hidden_ssid_flag=1</code>，服务层转成 <code>ssid_hidden=0</code>，即 SSID 正常广播；勾了"是"反而会连不上。</div>
+          </div>
+          <div class="mrow"><div class="mf">网络名称 / SSID</div><div class="mv">H</div><div class="mr">单个大写字母，区分大小写；不要加空格、引号或中文全角字符。</div></div>
+          <div class="mrow"><div class="mf">密码</div><div class="mv">12345678</div><div class="mr">8 位纯数字，与 <code>WIFI_SOFTAP_PASSWORD</code> 一致；勾选"显示密码"核对一遍。</div></div>
+          <div class="mrow"><div class="mf">安全性</div><div class="mv">WPA/WPA2-Personal</div><div class="mr">等价写法：WPA2-PSK、WPA/WPA2-PSK、WPA2-个人。<span class="mno">WPA3-Personal / SAE / 开放 / 企业级 EAP 均不匹配</span></div></div>
+          <div class="mrow"><div class="mf">隐私（Android 12+）</div><div class="mv">使用设备 MAC</div><div class="mr">若只有"随机 MAC"也可连接；连上后可在 WLAN 详情里看到实际 MAC，与串口 <code>STA JOIN MAC=</code> 对比。</div></div>
+          <div class="mrow"><div class="mf">隐藏的网络</div><div class="mv">否 / 关闭</div><div class="mr">保持默认关闭即可；找不到列表时再点"添加网络"，不是因为热点被隐藏。</div></div>
+          <div class="mrow"><div class="mf">IP 设置 / 代理</div><div class="mv">DHCP（动态） / 无</div><div class="mr">固件启动 <code>netifapi_dhcps_start()</code>，手机应自动拿到 192.168.63.x、网关 192.168.63.1。<span class="mno">不要设静态 IP</span></div></div>
+          <div class="mrow"><div class="mf">频段 / 信道</div><div class="mv">2.4 GHz / CH6</div><div class="mr">核心板只有 2.4 GHz；部分手机"添加网络"里有频段选项时选 2.4 GHz，关掉 5 GHz 优先和 WLAN+ 智能切换。</div></div>
+          <div class="mrow"><div class="mf">按流量计费</div><div class="mv">不视为计量 / 无</div><div class="mr">默认即可，避免系统因为"计量网络"限制连接。</div></div>
+          <div class="mrow"><div class="mf">弹出「无互联网」</div><div class="mv">保持连接 / 仍然连接</div><div class="mr"><b>这是正常现象</b>：核心板只是 AP + DHCP，没有接外网。手机会提示"无法访问互联网"，务必选保持连接，别点"切换网络"；建议先临时关闭移动数据。</div></div>
+          <div class="mtip">
+            <b>填完点保存 / 连接后怎么确认成功：</b>手机 WLAN 详情显示「已连接」、IP 形如 <code>192.168.63.3</code>、网关 <code>192.168.63.1</code>；同时串口出现
+            <code>[EVENT] STA JOIN</code> → <code>****** 手机连接热点成功 / PHONE CONNECTED HOTSPOT SUCCESS ******</code> → <code>[DHCP] phone ... IP=192.168.63.3</code> → <code>RESULT / 实训验收</code>。<br>
+            <b>若保存后一直"正在获取 IP 地址"或反复断开：</b>先长按热点「忘记网络」再按上表重填一次；确认串口已有 <code>SSID "H" is now broadcasting</code> 与 <code>SoftAp start success.</code>（没有则说明是板卡侧问题，见下方排障卡）；关掉移动数据与 WLAN+；换另一台手机交叉验证。<br>
+            <b>源码依据：</b><code>softap_sample.c</code> 第 60-62 行（H / 12345678 / CH6）、第 150 行（WPA2_WPA_PSK_MIX）、第 157 行（hidden_ssid_flag=1 不隐藏）。
           </div>
         </div>
       </div>
