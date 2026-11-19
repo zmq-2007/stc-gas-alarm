@@ -1,20 +1,26 @@
-wifiap 实训 · 预期串口日志（COMx / 115200 / 8N1）
-说明：以下为改造后 softap_sample.c 中 PRINT 语句的真实输出格式，MAC / IP / RSSI 会随实际手机变化。
+wifiap 实训 · 预期串口日志（DEBUG_UART=UART0 / 115200 / 8N1）
+说明：以下为排障加固后 softap_sample.c 中 PRINT 语句的真实输出格式，MAC / IP / RSSI 会随实际手机变化。
 本文件是「预期/核对用」样本，不是真实采集数据。真实采集请运行：
-    python wifiap_serial_monitor.py --port COM7 --baud 115200
-程序会实时显示并另存 wifiap_serial_YYYYMMDD_HHMMSS.log。
+    python wifiap_serial_monitor.py --port COM7 --baud 115200 --until-success
+程序会实时显示、另存 wifiap_serial_YYYYMMDD_HHMMSS.log，并在结束时自动输出「串口排障结论」。
 
 --------------------------------------------------------------------
 [WIFIAP] ==== WiFi AP (SoftAP) Sample Start ====
-[WIFIAP] WiFi init OK.
+[WIFIAP] [DIAG] BOOT CHECK: waiting WiFi host init (max 15000 ms) ...
+[WIFIAP] WiFi init OK. (status=1)
+[WIFIAP] [DIAG] register_event_cb ret=0
 [WIFIAP] Register event callback OK (sta_join / sta_leave).
 [WIFIAP] SSID    : H
 [WIFIAP] PASSWORD: 12345678
 [WIFIAP] SECURITY: WPA/WPA2-PSK MIX, CHANNEL: 6
-[WIFIAP] SoftAP try enable ...
-[WIFIAP] SoftAP enabled OK.
-[WIFIAP] netif ap0 IP=192.168.63.1 MASK=255.255.255.0 GW=192.168.63.2
+[WIFIAP] [DIAG] set_softap_config_advance ret=0 (hidden_ssid_flag=1)
+[WIFIAP] SoftAP try enable ... (attempt 1/3, wifi_inited=1)
+[WIFIAP] [DIAG] wifi_softap_enable ret=0
+[WIFIAP] SoftAP enabled OK. SSID "H" is now broadcasting.
+[WIFIAP] [DIAG] netif_set_addr ret=0
+[WIFIAP] [DIAG] dhcps_start ret=0
 [WIFIAP] DHCP server started OK (pool 192.168.63.x)
+[WIFIAP] netif IP=192.168.63.1 MASK=255.255.255.0 GW=192.168.63.2
 [WIFIAP] SoftAp start success.
 [WIFIAP] >>> 请用手机 WLAN 搜索热点 "H"，输入密码 12345678 连接 <<<
 [WIFIAP] Waiting for phone ... (poll 2000 ms)
@@ -39,11 +45,53 @@ wifiap 实训 · 预期串口日志（COMx / 115200 / 8N1）
 [WIFIAP] Connected stations: 0
 --------------------------------------------------------------------
 
+【异常分支示例 A】WiFi host 15 s 未就绪（新版会自动兜底，不再死等）
+[WIFIAP] ==== WiFi AP (SoftAP) Sample Start ====
+[WIFIAP] [DIAG] BOOT CHECK: waiting WiFi host init (max 15000 ms) ...
+[WIFIAP] WARN: wifi_is_wifi_inited() still 0 -> call wifi_init() fallback.
+[WIFIAP] [DIAG] wifi_init() ret=0, status now=1
+[WIFIAP] WiFi init OK. (status=1)
+（若 status 仍为 0，多半是没烧 *_all.fwpkg / NV 射频校准数据缺失）
+
+【异常分支示例 B】SoftAP 使能失败（多为 NV 或 WiFi device 侧固件问题）
+[WIFIAP] SoftAP try enable ... (attempt 1/3, wifi_inited=1)
+[WIFIAP] [DIAG] wifi_softap_enable ret=1
+[WIFIAP] SoftAP try enable ... (attempt 2/3, wifi_inited=1)
+[WIFIAP] [DIAG] wifi_softap_enable ret=1
+[WIFIAP] FATAL: softap enable FAIL after 3 attempts.
+[WIFIAP] 排查：1) 是否烧录 *_all.fwpkg（含 NV 校准数据） 2) 复位后串口是否出现 WiFi init OK
+
+【异常分支示例 C】netif / DHCP 失败（新版保持热点开启，手机仍可搜到 H）
+[WIFIAP] WARN: netif ap0/ap1/wlan0 not found -> keep hotspot ON (IP 分配可能不可用)
+[WIFIAP] SoftAp start success.
+--------------------------------------------------------------------
+
+排障对照表（烧录后搜不到热点时，看串口最后停在哪一行）
+1. 完全没有 [WIFIAP] 行
+   -> 固件没跑：烧错包 / 烧录后没再按 RESET / 串口选错或波特率不对 /
+      IDE 重新 Kconfig 时把 support WIFIAP Sample 取消后没重新 build。
+2. 只有 Start 与 BOOT CHECK，没有 WiFi init OK
+   -> WiFi host 未初始化：改烧 *_all.fwpkg（含 ws63_all_nv.bin），重新上电。
+3. 有 WiFi init OK，但 wifi_softap_enable ret 非 0 / 出现 FATAL
+   -> WiFi device 侧或 NV 校准数据异常：重新烧 all.fwpkg，必要时 rebuild 后再烧。
+4. 有 "SSID H is now broadcasting" 但手机列表里看不到 H
+   -> 手机侧：手动「添加网络」填 H / 12345678 / WPA2-PSK；只搜 2.4 GHz；
+      在列表底部找被折叠的「无互联网」热点；关闭 WLAN+ 智能切换。
+5. 出现 SoftAp start success，但连上后没有 STA JOIN
+   -> 密码或加密方式不匹配；或手机自动切回移动数据，先关移动数据再连。
+
 验收要点：
 1. 手机 WLAN 列表中出现热点 H（WPA2，2.4 GHz 6 信道）。
 2. 输入密码 12345678 后状态变为「已连接」，手机获得 192.168.63.x 地址。
 3. 串口出现「手机连接热点成功 / PHONE CONNECTED HOTSPOT SUCCESS」。
 4. 串口出现 [DHCP] phone IP=... 与 LINK UP，说明 DHCP 与链路均正常。
 
-烧录提示：HiSpark Studio 出现 "Connecting, please reset device..." 时，
-必须人工按一下开发板右侧 RESET 键才能继续，这一步无法由脚本代按。
+烧录提示：
+1. 请烧录 wifiap_lab/firmware/ws63-liteos-app_all.fwpkg
+   （或 SDK 的 output/ws63/fwpkg/ws63-liteos-app/ws63-liteos-app_all.fwpkg），
+   这个包才包含 Bootloader + App + NV 校准数据 + 分区表；
+   不要只烧单个 ws63-liteos-app.bin，也不要用 load_only.fwpkg 代替 all.fwpkg。
+2. HiSpark Studio 出现 "Connecting, please reset device..." 时，
+   必须人工按一下开发板 RESET 键；烧录完成后再按一次 RESET 让新固件运行。
+3. 若 IDE 里重新点过 Kconfig / Save，请确认 Application → Enable the Sample of peripheral
+   下的 support WIFIAP Sample 仍被选中，再 build / rebuild，否则固件里不会有 wifiap 代码。
