@@ -10,13 +10,26 @@
    手机一连上就打印 MAC、RSSI、速率以及 `手机连接热点成功 / PHONE CONNECTED HOTSPOT SUCCESS`；断开时打印 `PHONE DISCONNECTED`。
 3. 用 `wifi_softap_get_sta_list()` 每 2 s 轮询在线站点，用 `netifapi_dhcps_get_client_ip()` 查询 DHCP 分配给手机的 IP，
    打印 `[DHCP] phone MAC=... IP=192.168.63.x` 与 `LINK UP: phone -> AP(H)`。
-4. 等待 WiFi 就绪改为 **15 s 有限等待 + 超时自动 `wifi_init()` 兜底**（早前版本曾改成无超时的
-   `while (wifi_is_wifi_inited() == 0)`，实测会卡死，已废弃，详见下方排障加固）。
-5. 串口波特率 115200（DEBUG_UART / UART0）。
-6. **排障加固（针对实测「烧录后没有生成网络」）**：取消无超时的 `while (wifi_is_wifi_inited() == 0)` 死等，
-   改为 15 s 有限等待 + 超时自动 `wifi_init()` 兜底；显式 `hidden_ssid_flag=1`（不隐藏 SSID），
-   `wifi_softap_enable()` 失败重试 3 次；事件回调 / netif / DHCP 失败只告警，不再 `wifi_softap_disable()`
-   把已起来的热点关掉；每一步都打印 `[DIAG]` 返回码，便于按串口定位。
+4. 串口波特率 115200（DEBUG_UART / UART0）。
+5. **v4 根因修复（本版，针对实测「连续三次连不上」）**：开机固定 5 s 等 WiFi device 就绪后，
+   **由样例主动调用 `wifi_init()`**（带返回码/status 打印、重试 10 次），随后 `wifi_softap_enable()`
+   持续重试 120 s，中途 init 状态丢失会自动重新初始化；每 10 s 打印心跳状态；
+   启动行带 `BUILD=v4-wifiinit-fix`，可据此确认烧的是不是新固件。
+6. 保留的稳健性改动：显式 `hidden_ssid_flag=1`（不隐藏 SSID）；事件回调 / netif / DHCP 失败只告警，
+   绝不 `wifi_softap_disable()` 把已起来的热点关掉；每一步都打印 `[DIAG]` 返回码。
+
+## 为什么之前一直连不上（确定性根因）
+
+`wifi_softap_enable()` 内部第一步调用 `wifi_get_enable_status()`（`soc_wifi_service_api.c:3057-3074`），
+该函数在 `uapi_wifi_get_init_status() != 1` 时直接返回 `ERRCODE_FAIL`。这个状态只能由 `wifi_init()` 置位，
+而全工程 `wifi_init()` 的调用点只有三处：`AT+WIFIINIT`（`at_wifi.c:1599`）、PM 唤醒恢复（`pm_porting.c:659`）、
+`plat_reset_board()` —— **系统启动链里没有任何一处调用它**（本 target `# CONFIG_ENABLE_WIFI_SAMPLE is not set`）。
+
+因此 vendor 原版「固定 5 s 延时后直接 `wifi_softap_enable()`」在这个工程配置下必然失败，SSID 永远不会广播；
+把它改成「等 `wifi_is_wifi_inited()`」同样是死路，因为没人去置位。**手机侧安全性、隐私、隐藏网络怎么填都救不了这一层。**
+
+已排除的误判：固件二进制确实含 `[WIFIAP]` / `WiFiSoftAPTask` / `12345678`，编译宏含 `-DWIFI_TASK_EXIST`（WiFi host 任务存在），
+`all.fwpkg` 的镜像清单本身就不含 `ws63-liteos-mfg.bin`（官方文档默认烧录包即如此）—— 都不是根因。
 
 ## 手机「手动添加网络」怎么选（安全性 / 隐私 / 隐藏的网络）
 
@@ -37,33 +50,45 @@
 若一直停在「正在获取 IP 地址」或反复断开：长按热点「忘记网络」后按上表重填；确认串口已有
 `SSID "H" is now broadcasting` 与 `SoftAp start success.`（没有则是板卡侧问题）；关闭移动数据；换另一台手机交叉验证。
 
-> **烧录后搜不到热点 H**：请烧 `wifiap/ws63-liteos-app_all.fwpkg`（含 Bootloader + App + NV 射频校准数据 + 分区表），
-> 不要只烧单个 `.bin` 或用 `load_only.fwpkg`；烧完再按一次 RESET，然后运行
-> `python wifiap_serial_monitor.py --port COMx --until-success`，脚本结束时会自动给出「串口排障结论」。
+> **复测三步（必做）**：① 烧 `wifiap/ws63-liteos-app_all.fwpkg`（本次 v4 重新编译的版本，
+> `1 468 456 B`），出现 `Connecting, please reset device...` 按 RESET，**烧完再按一次 RESET**；
+> ② 打开串口（115200 / 8N1），确认第一行是 `==== WiFi AP (SoftAP) Sample Start  BUILD=v4-wifiinit-fix ====`，
+> 没有这个标记说明板子里还是旧固件；③ 运行 `python wifiap_serial_monitor.py --diag`，
+> 自动选串口抓 30 s 并打印「串口排障结论」，日志存为 `wifiap_serial_*.log`。
+> 先看串口有没有 `SSID "H" is now broadcasting` 与 `SoftAp start success.`：**没有就是板卡侧问题**，手机侧不用再试。
 > 完整对照表见 `预期串口日志.txt`，网页里也有「排障：热点 H 为什么没出现」板块。
 
-## 预期串口日志（精简版；加固版固件会额外打印 [DIAG] 行）
+## 预期串口日志（v4 精简版；完整版见 `预期串口日志.txt`）
 
 ```
-[WIFIAP] ==== WiFi AP (SoftAP) Sample Start ====
+[WIFIAP] ==== WiFi AP (SoftAP) Sample Start  BUILD=v4-wifiinit-fix ====
+[WIFIAP] [DIAG] boot delay 5000 ms / before init: wifi_is_wifi_inited()=0
+[WIFIAP] [DIAG] ROOT CAUSE: 本 target 启动链不调用 wifi_init()，init_status 恒为 0
+[WIFIAP] [DIAG] wifi_init() try 1/10 ret=0 status=1
 [WIFIAP] WiFi init OK.
+[WIFIAP] [DIAG] after init: wifi_is_wifi_inited()=1
 [WIFIAP] Register event callback OK (sta_join / sta_leave).
 [WIFIAP] SSID    : H
 [WIFIAP] PASSWORD: 12345678
 [WIFIAP] SECURITY: WPA/WPA2-PSK MIX, CHANNEL: 6
-[WIFIAP] SoftAP try enable ...
-[WIFIAP] SoftAP enabled OK.
-[WIFIAP] netif ap0 IP=192.168.63.1 MASK=255.255.255.0 GW=192.168.63.2
+[WIFIAP] [DIAG] set_softap_config_advance ret=0 (hidden_ssid_flag=1)
+[WIFIAP] [DIAG] wifi_softap_enable try 1/60 ret=0 (init_status=1)
+[WIFIAP] SoftAP enabled OK. SSID "H" is now broadcasting.
+[WIFIAP] [DIAG] netif_set_addr ret=0   dhcps_start ret=0
 [WIFIAP] DHCP server started OK (pool 192.168.63.x)
+[WIFIAP] netif IP=192.168.63.1 MASK=255.255.255.0 GW=192.168.63.2
 [WIFIAP] SoftAp start success.
 [WIFIAP] >>> 请用手机 WLAN 搜索热点 "H"，输入密码 12345678 连接 <<<
 [WIFIAP] Waiting for phone ... (poll 2000 ms)
+[WIFIAP] [DIAG] heartbeat: init_status=1, netif=ap0-ready, stations=0
 [WIFIAP] Connected stations: 1
 [WIFIAP] [EVENT] STA JOIN  MAC=xx:xx:xx:xx:xx:xx  RSSI=-45 dBm  RATE=65000 kbps
 [WIFIAP] ****** 手机连接热点成功 / PHONE CONNECTED HOTSPOT SUCCESS ******
-[WIFIAP] SSID=H  PASSWORD=12345678  AP_IP=192.168.63.1
 [WIFIAP] [DHCP] phone MAC=xx:xx:xx:xx:xx:xx  IP=192.168.63.3
 [WIFIAP] LINK UP: phone -> AP(H)  AP=192.168.63.1  phone=192.168.63.3
+[WIFIAP] ---------------- RESULT / 实训验收 ----------------
+[WIFIAP] ****** 手机连接热点成功 / PHONE CONNECTED HOTSPOT SUCCESS ******
+[WIFIAP] ---------------- RESULT END ----------------
 ```
 
 > 注：MAC / IP / RSSI 为实际手机的值；烧录后按 RESET，打开串口监视器（115200）即可看到。

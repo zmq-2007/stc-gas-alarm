@@ -5,10 +5,11 @@ wifiap 实训 · 串口监视器
 用途：读取 HiHope NearLink WS63E 核心板 UART 打印，验证「手机连接核心板热点成功」。
 
 用法（在烧录并按 RESET 之后运行）：
+    python wifiap_serial_monitor.py --diag          # 【推荐】一键排障：自动选口抓 30 s 并给结论
     python wifiap_serial_monitor.py                 # 自动列出并选择可用串口
     python wifiap_serial_monitor.py --port COM7     # 指定串口
     python wifiap_serial_monitor.py --port COM7 --baud 115200 --until-success
-    python wifiap_serial_monitor.py --port COM7 --baud 115200 --until-success
+    python wifiap_serial_monitor.py --port COM7 --timeout 30   # 只抓 30 秒
     python wifiap_serial_monitor.py --demo          # 不接板子，回放预期日志（仅演示，标记为模拟）
     python wifiap_serial_monitor.py --verify        # 静态验收：源码/编译注册/固件/日志/网页一致性检查
 
@@ -34,17 +35,22 @@ KEY_LINES = (
     "RESULT END",
 )
 
-DEMO_LOG = """[WIFIAP] ==== WiFi AP (SoftAP) Sample Start ====
-[WIFIAP] [DIAG] BOOT CHECK: waiting WiFi host init (max 15000 ms) ...
-[WIFIAP] WiFi init OK. (status=1)
+DEMO_LOG = """[WIFIAP] ==== WiFi AP (SoftAP) Sample Start  BUILD=v4-wifiinit-fix ====
+[WIFIAP] [DIAG] 看不到本行 = 烧错固件 / COM 口选错 / 波特率不是 115200
+[WIFIAP] [DIAG] boot delay 5000 ms: wait WiFi device ready (vendor 原版做法)
+[WIFIAP] [DIAG] before init: wifi_is_wifi_inited()=0
+[WIFIAP] [DIAG] ROOT CAUSE: wifi_get_enable_status() needs init_status=1,
+[WIFIAP] [DIAG] but this target has NO startup wifi_init() -> call it here.
+[WIFIAP] [DIAG] wifi_init() try 1/10 ret=0 status=1
+[WIFIAP] WiFi init OK.
+[WIFIAP] [DIAG] after init: wifi_is_wifi_inited()=1
 [WIFIAP] [DIAG] register_event_cb ret=0
 [WIFIAP] Register event callback OK (sta_join / sta_leave).
 [WIFIAP] SSID    : H
 [WIFIAP] PASSWORD: 12345678
 [WIFIAP] SECURITY: WPA/WPA2-PSK MIX, CHANNEL: 6
 [WIFIAP] [DIAG] set_softap_config_advance ret=0 (hidden_ssid_flag=1)
-[WIFIAP] SoftAP try enable ... (attempt 1/3, wifi_inited=1)
-[WIFIAP] [DIAG] wifi_softap_enable ret=0
+[WIFIAP] [DIAG] wifi_softap_enable try 1/60 ret=0 (init_status=1)
 [WIFIAP] SoftAP enabled OK. SSID "H" is now broadcasting.
 [WIFIAP] [DIAG] netif_set_addr ret=0
 [WIFIAP] [DIAG] dhcps_start ret=0
@@ -54,6 +60,7 @@ DEMO_LOG = """[WIFIAP] ==== WiFi AP (SoftAP) Sample Start ====
 [WIFIAP] >>> 请用手机 WLAN 搜索热点 "H"，输入密码 12345678 连接 <<<
 [WIFIAP] Waiting for phone ... (poll 2000 ms)
 [WIFIAP] Connected stations: 0
+[WIFIAP] [DIAG] heartbeat: init_status=1, netif=ap0-ready, stations=0
 [WIFIAP] Connected stations: 1
 [WIFIAP] [EVENT] STA JOIN  MAC=A8:6D:AA:3F:21:70  RSSI=-46 dBm  RATE=65000 kbps
 [WIFIAP] ****** 手机连接热点成功 / PHONE CONNECTED HOTSPOT SUCCESS ******
@@ -69,9 +76,10 @@ DEMO_LOG = """[WIFIAP] ==== WiFi AP (SoftAP) Sample Start ====
 
 # 排障阶段：按日志出现顺序判定「卡在哪一步」
 DIAG_STAGES = (
-    ("boot", "==== WiFi AP (SoftAP) Sample Start ====", "固件已启动"),
-    ("init", "WiFi init OK", "WiFi host 已初始化"),
-    ("enable", "wifi_softap_enable ret=0", "SoftAP 使能成功"),
+    ("boot", "==== WiFi AP (SoftAP) Sample Start", "固件已启动"),
+    ("build", "BUILD=v4-wifiinit-fix", "烧录的是 v4 根因修复版固件"),
+    ("init", "WiFi init OK", "wifi_init() 成功，init_status=1"),
+    ("enable", "wifi_softap_enable try 1/60 ret=0", "SoftAP 使能成功"),
     ("ap", "is now broadcasting", "SSID「H」已开始广播"),
     ("ready", "SoftAp start success", "热点可用（含 DHCP 或降级保活）"),
     ("success", "手机连接热点成功", "手机连接成功"),
@@ -85,15 +93,22 @@ DIAG_ADVICE = {
         "  3) 串口选 DEBUG_UART=UART0，波特率 115200 / 8N1；板载若有多个串口请逐个试",
         "  4) 确认 HiSpark Studio 的 Kconfig 里 support WIFIAP Sample 仍处于选中状态后重新 build",
     ],
+    "build": [
+        "没有 BUILD=v4-wifiinit-fix 标记 -> 板子里跑的还是旧固件",
+        "  必须重新烧录 wifiap_lab/firmware/ws63-liteos-app_all.fwpkg（本次重新编译的版本）",
+        "  烧录出现 Connecting, please reset device... 时按 RESET，烧完再按一次 RESET",
+    ],
     "init": [
-        "只看到 Start，没有 WiFi init OK -> WiFi host 15 s 未就绪",
-        "  新版固件会自动调用 wifi_init() 兜底；若 [DIAG] status 仍为 0：",
-        "  1) 必须烧 *_all.fwpkg（含 ws63_all_nv.bin 射频校准数据），不要只烧单个 .bin 或 load_only.fwpkg",
-        "  2) 用 HiSpark Studio 执行一次 rebuild 后再烧录",
+        "有 Start 但没有 WiFi init OK -> wifi_init() 没成功（本 target 的关键根因）",
+        "  wifi_softap_enable() 内部 wifi_get_enable_status() 要求 init_status=1；",
+        "  而本工程启动链不调用 wifi_init()，所以旧固件（含 vendor 原版）必然 enable 失败。",
+        "  v4 固件会主动调用 wifi_init() 并重试 10 次，请看 [DIAG] wifi_init() try ... ret/status：",
+        "  1) 若 status 一直 0：烧 *_all.fwpkg（含 ws63_all_nv.bin），重新上电，必要时 rebuild",
+        "  2) 也可以在串口助手手动发 AT+WIFIINIT，v4 的持续重试会自动接上",
     ],
     "enable": [
         "WiFi 已初始化，但 wifi_softap_enable ret 非 0 -> 热点没能开启",
-        "  1) 看 [DIAG] wifi_softap_enable ret= 后面的返回码，以及 FATAL 行",
+        "  1) v4 会持续重试 120 s，请等待并观察 [DIAG] wifi_softap_enable try N/60",
         "  2) 多为 WiFi device 侧固件 / NV 校准数据问题：改烧 *_all.fwpkg 并重新上电",
         "  3) 确认没有别的样例同时占用 AP（g_softap_enble_flag 已置位也会失败）",
     ],
@@ -287,6 +302,9 @@ def run_verify():
     chk("源码：有限等待 + wifi_init 兜底（不再无限死等）",
         "softap_wait_init" in src and "wifi_init()" in src and
         "while (wifi_is_wifi_inited() == 0) {" not in src)
+    chk("源码：v4 主动 wifi_init() 根因修复与 BUILD 标记",
+        "softap_ensure_wifi_init" in src and "v4-wifiinit-fix" in src
+        and "WIFI_SOFTAP_ENABLE_RETRY    60" in src)
     chk("源码：显式不隐藏 SSID 且附属失败不关热点",
         "hidden_ssid_flag = 1" in src and "(void)wifi_softap_disable()" not in src)
     chk("源码：热点参数 H / 12345678 / CH6", 'WIFI_SOFTAP_SSID            "H"' in src and
@@ -360,10 +378,15 @@ def main():
     ap.add_argument("--timeout", type=int, default=0, help="采集秒数，0 表示不限")
     ap.add_argument("--demo", action="store_true", help="回放预期日志（仅演示，不接板子）")
     ap.add_argument("--verify", action="store_true", help="静态验收：源码/注册/固件/日志/网页一致性检查")
+    ap.add_argument("--diag", action="store_true",
+                    help="一键排障：自动选串口、抓 30 s、给出卡点结论并保存日志")
     args = ap.parse_args()
 
     if args.verify:
         return run_verify()
+    if args.diag:
+        args.timeout = 30
+        args.until_success = True
 
     log_path = make_log_path()
     if args.demo:
@@ -384,6 +407,8 @@ def main():
                 return 1
         code = run_serial(args.port, args.baud, args.until_success, args.timeout, log_path)
     print("\n完整日志已保存：%s" % log_path, flush=True)
+    if args.diag and code != 0:
+        print("请把上面【串口排障结论】和本 .log 文件前 30 行发回，即可按对照表定位。", flush=True)
     return code
 
 
